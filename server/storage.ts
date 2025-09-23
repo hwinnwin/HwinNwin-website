@@ -74,7 +74,8 @@ export class SqliteStorage implements IStorage {
         min_job REAL NOT NULL DEFAULT 220,
         logo_url TEXT DEFAULT '/static/lee-logo.png',
         primary_color TEXT DEFAULT '#1E40AF',
-        owner_pin TEXT NOT NULL DEFAULT '123456',
+        owner_pin TEXT NOT NULL,
+        is_default_pin INTEGER NOT NULL DEFAULT 1,
         sendgrid_api_key TEXT,
         from_email TEXT DEFAULT 'quotes@leemurdokpanels.com.au',
         site_url TEXT DEFAULT 'https://lee888.com.au',
@@ -129,12 +130,76 @@ export class SqliteStorage implements IStorage {
       CREATE INDEX IF NOT EXISTS idx_quote_history_quote_id ON quote_status_history(quote_id);
     `);
 
-    // Insert default settings if not exists
+    // Handle settings initialization and migration
     const settingsExists = this.db.prepare("SELECT COUNT(*) as count FROM settings").get() as { count: number };
     if (settingsExists.count === 0) {
+      // New installation - initialize with default PIN
       this.db.prepare(`
-        INSERT INTO settings (id) VALUES (1)
+        INSERT INTO settings (id, owner_pin, is_default_pin) VALUES (1, '123456', 1)
       `).run();
+    } else {
+      // Existing installation - check if migration is needed
+      try {
+        const existingSettings = this.db.prepare("SELECT is_default_pin FROM settings WHERE id = 1").get() as any;
+        if (existingSettings === undefined || existingSettings.is_default_pin === undefined) {
+          // Add the new field for existing installations
+          this.db.exec("ALTER TABLE settings ADD COLUMN is_default_pin INTEGER NOT NULL DEFAULT 1");
+        }
+      } catch (error) {
+        // Column might already exist, ignore error
+      }
+
+      // Data migration: Fix existing bad JSON rows (one-time cleanup)
+      this.migrateJsonFields();
+    }
+  }
+
+  private migrateJsonFields(): void {
+    try {
+      // Fix any existing 'undefined' strings in JSON fields
+      console.log('Running JSON field migration...');
+      
+      const quotesToFix = this.db.prepare(`
+        SELECT id, items_json, rates_json, calc_json, photos_json 
+        FROM quotes 
+        WHERE items_json = 'undefined' 
+           OR rates_json = 'undefined' 
+           OR calc_json = 'undefined' 
+           OR photos_json = 'undefined'
+      `).all() as any[];
+
+      let fixedCount = 0;
+      for (const quote of quotesToFix) {
+        const updates: any = {};
+        
+        if (quote.items_json === 'undefined') {
+          updates.items_json = '[]';
+        }
+        if (quote.rates_json === 'undefined') {
+          updates.rates_json = '{}';
+        }
+        if (quote.calc_json === 'undefined') {
+          updates.calc_json = null;
+        }
+        if (quote.photos_json === 'undefined') {
+          updates.photos_json = '[]';
+        }
+
+        if (Object.keys(updates).length > 0) {
+          const setClause = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+          const values = Object.values(updates);
+          
+          this.db.prepare(`UPDATE quotes SET ${setClause} WHERE id = ?`)
+            .run(...values, quote.id);
+          fixedCount++;
+        }
+      }
+
+      if (fixedCount > 0) {
+        console.log(`Fixed ${fixedCount} quotes with bad JSON data`);
+      }
+    } catch (error) {
+      console.error('JSON field migration error:', error);
     }
   }
 
@@ -336,6 +401,7 @@ export class SqliteStorage implements IStorage {
       logoUrl: result.logo_url,
       primaryColor: result.primary_color,
       ownerPin: result.owner_pin,
+      isDefaultPin: Boolean(result.is_default_pin),
       sendgridApiKey: result.sendgrid_api_key,
       fromEmail: result.from_email,
       siteUrl: result.site_url,
@@ -353,7 +419,14 @@ export class SqliteStorage implements IStorage {
         `${field.replace(/([A-Z])/g, '_$1').toLowerCase()} = ?`
       ).join(', ');
       
-      const values = fields.map(field => settings[field as keyof InsertSettings]);
+      const values = fields.map(field => {
+        const value = settings[field as keyof InsertSettings];
+        // Convert boolean to integer for SQLite compatibility
+        if (field === 'isDefaultPin' && typeof value === 'boolean') {
+          return value ? 1 : 0;
+        }
+        return value;
+      });
 
       this.db.prepare(`
         UPDATE settings 

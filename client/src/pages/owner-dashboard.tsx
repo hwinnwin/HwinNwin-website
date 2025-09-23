@@ -72,7 +72,7 @@ export default function OwnerDashboard() {
   const { data: analytics, isLoading: analyticsLoading } = useQuery<Analytics>({
     queryKey: ['/api/analytics'],
     retry: (failureCount, error: any) => {
-      if (error?.message?.includes('401')) {
+      if (error?.status === 401 || error?.response?.status === 401) {
         navigate('/');
         return false;
       }
@@ -83,7 +83,7 @@ export default function OwnerDashboard() {
   const { data: quotes, isLoading: quotesLoading } = useQuery<Quote[]>({
     queryKey: ['/api/quotes'],
     retry: (failureCount, error: any) => {
-      if (error?.message?.includes('401')) {
+      if (error?.status === 401 || error?.response?.status === 401) {
         navigate('/');
         return false;
       }

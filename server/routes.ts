@@ -8,10 +8,24 @@ import { EmailService } from "./services/emailService";
 import { PDFService } from "./services/pdfService";
 import { ImageService } from "./services/imageService";
 import { calculateQuote, validatePhotos } from "./services/quoteCalculator";
-import { quoteRateLimiter, generalRateLimiter } from "./middleware/rateLimiter";
+import { quoteRateLimiter, generalRateLimiter, pinChangeRateLimiter } from "./middleware/rateLimiter";
 import { requireOwnerPin, createOwnerSession, requireOwnerSession } from "./middleware/ownerAuth";
-import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema } from "@shared/schema";
+import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema } from "@shared/schema";
+import { hashPin, comparePin, isPinHashed } from "./services/pinService";
 import { z } from "zod";
+
+// Helper function to safely parse JSON and handle 'undefined' strings
+function safeJsonParse<T>(jsonString: string | null | undefined, defaultValue: T): T {
+  if (!jsonString || jsonString === 'undefined' || jsonString === 'null') {
+    return defaultValue;
+  }
+  try {
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.warn('Failed to parse JSON:', jsonString, 'returning default:', defaultValue);
+    return defaultValue;
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const imageService = new ImageService();
@@ -146,10 +160,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         ...quote,
-        items: quote.itemsJson && quote.itemsJson !== 'undefined' ? JSON.parse(quote.itemsJson) : [],
-        rates: quote.ratesJson && quote.ratesJson !== 'undefined' ? JSON.parse(quote.ratesJson) : {},
-        calculation: quote.calcJson && quote.calcJson !== 'undefined' ? JSON.parse(quote.calcJson) : null,
-        photos: quote.photosJson && quote.photosJson !== 'undefined' ? JSON.parse(quote.photosJson) : [],
+        items: safeJsonParse(quote.itemsJson, []),
+        rates: safeJsonParse(quote.ratesJson, {}),
+        calculation: safeJsonParse(quote.calcJson, null),
+        photos: safeJsonParse(quote.photosJson, []),
         statusHistory
       });
     } catch (error) {
@@ -216,7 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate PDF and send email
       const settings = await storage.getSettings();
       const emailService = new EmailService(settings);
-      const calculation = quote.calcJson && quote.calcJson !== 'undefined' ? JSON.parse(quote.calcJson) : null;
+      const calculation = safeJsonParse(quote.calcJson, null);
 
       const quoteUrl = `${settings.siteUrl}/q/${quote.customerLinkSlug}`;
       const pdfUrl = `${settings.siteUrl}/api/quote/${quote.id}/pdf`;
@@ -256,20 +270,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quotes = await storage.getAllQuotes();
       
       const quotesWithCalculations = quotes.map(quote => {
-        try {
-          return {
-            ...quote,
-            calculation: quote.calcJson && quote.calcJson !== 'undefined' ? JSON.parse(quote.calcJson) : null,
-            items: quote.itemsJson && quote.itemsJson !== 'undefined' ? JSON.parse(quote.itemsJson) : []
-          };
-        } catch (parseError) {
-          console.error(`JSON parse error for quote ${quote.id}:`, parseError);
-          return {
-            ...quote,
-            calculation: null,
-            items: []
-          };
-        }
+        return {
+          ...quote,
+          calculation: safeJsonParse(quote.calcJson, null),
+          items: safeJsonParse(quote.itemsJson, [])
+        };
       });
 
       res.json(quotesWithCalculations);
@@ -380,7 +385,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { pin } = req.body;
       const settings = await storage.getSettings();
       
-      if (pin === settings.ownerPin) {
+      // Use constant-time comparison to prevent timing attacks
+      const isValidPin = isPinHashed(settings.ownerPin) 
+        ? await comparePin(pin, settings.ownerPin)
+        : pin === settings.ownerPin;
+        
+      if (isValidPin) {
         // Regenerate session ID to prevent session fixation attacks
         if (req.session) {
           req.session.regenerate((err) => {
@@ -466,27 +476,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Change owner PIN (requires current PIN)
-  app.post('/api/owner/change-pin', async (req, res) => {
+  // First-time PIN change (unauthenticated, for fresh installations)
+  app.post('/api/owner/first-time-pin-change', pinChangeRateLimiter.middleware(), async (req, res) => {
     try {
-      const { currentPin, newPin } = req.body;
-      
-      if (!currentPin || !newPin) {
-        return res.status(400).json({ message: "Current PIN and new PIN required" });
-      }
-
-      if (newPin.length < 4 || newPin.length > 6) {
-        return res.status(400).json({ message: "PIN must be 4-6 digits" });
-      }
-
       const settings = await storage.getSettings();
       
-      if (currentPin !== settings.ownerPin) {
-        return res.status(401).json({ message: "Invalid current PIN" });
+      // Only allow first-time PIN change if using default PIN
+      if (!settings.isDefaultPin) {
+        return res.status(403).json({ 
+          message: "First-time PIN change is only allowed for fresh installations with default PIN",
+          requiresNormalPinChange: true 
+        });
       }
 
-      await storage.updateSettings({ ownerPin: newPin });
-      res.json({ message: "PIN changed successfully" });
+      // Validate request body using strong PIN requirements
+      const validationResult = firstTimePinChangeSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: "PIN validation failed",
+          errors: validationResult.error.errors
+        });
+      }
+
+      const { newPin } = validationResult.data;
+      
+      // Ensure new PIN is different from default PIN
+      if (newPin === settings.ownerPin) {
+        return res.status(400).json({ 
+          message: "New PIN must be different from the default PIN" 
+        });
+      }
+
+      // Hash the new PIN before storage
+      const hashedPin = await hashPin(newPin);
+      
+      // Update PIN and mark as no longer default
+      await storage.updateSettings({ 
+        ownerPin: hashedPin, 
+        isDefaultPin: false 
+      });
+
+      res.json({ 
+        message: "PIN changed successfully. You can now access owner features.",
+        success: true 
+      });
+
+    } catch (error) {
+      console.error('First-time PIN change error:', error);
+      res.status(500).json({ message: "Failed to change PIN" });
+    }
+  });
+
+  // Change owner PIN (requires current PIN and owner session)
+  app.post('/api/owner/change-pin', requireOwnerSession, pinChangeRateLimiter.middleware(), async (req, res) => {
+    try {
+      // Validate request body using strong PIN requirements
+      const validationResult = pinChangeSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: "PIN validation failed",
+          errors: validationResult.error.errors
+        });
+      }
+
+      const { currentPin, newPin } = validationResult.data;
+      const settings = await storage.getSettings();
+      
+      // Verify current PIN using constant-time comparison
+      const isValidPin = isPinHashed(settings.ownerPin) 
+        ? await comparePin(currentPin, settings.ownerPin)
+        : currentPin === settings.ownerPin;
+        
+      if (!isValidPin) {
+        return res.status(401).json({ message: "Current PIN is incorrect" });
+      }
+
+      // Hash the new PIN before storage
+      const hashedPin = await hashPin(newPin);
+      
+      // Update PIN and ensure isDefaultPin is set to false
+      await storage.updateSettings({ 
+        ownerPin: hashedPin, 
+        isDefaultPin: false 
+      });
+
+      res.json({ 
+        message: "PIN changed successfully",
+        success: true 
+      });
 
     } catch (error) {
       console.error('Change PIN error:', error);

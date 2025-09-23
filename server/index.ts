@@ -4,6 +4,7 @@ import connectPgSimple from "connect-pg-simple";
 import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { migratePlaintextPinToHashed } from "./services/migrationService";
 
 const app = express();
 
@@ -87,6 +88,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Run PIN security migration before starting routes
+  try {
+    await migratePlaintextPinToHashed();
+  } catch (error) {
+    console.error('Critical: PIN migration failed', error);
+    process.exit(1);
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -94,7 +103,8 @@ app.use((req, res, next) => {
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    throw err;
+    console.error(err);
+    return;
   });
 
   // importantly only setup vite in development and after
