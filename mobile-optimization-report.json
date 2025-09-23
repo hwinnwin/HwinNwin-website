@@ -1,0 +1,674 @@
+{
+  "summary": {
+    "totalTests": 46,
+    "passedTests": 33,
+    "failedTests": 13,
+    "score": 72,
+    "scoreLevel": "Fair",
+    "categoryResults": {
+      "css": [
+        {
+          "test": "Mobile Media Queries Present",
+          "category": "css",
+          "success": true,
+          "details": "Found 1 mobile media queries",
+          "timestamp": "2025-09-23T03:26:27.804Z"
+        },
+        {
+          "test": "Touch Target Size Rules",
+          "category": "css",
+          "success": true,
+          "details": "CSS includes 44px minimum touch targets for mobile",
+          "timestamp": "2025-09-23T03:26:27.805Z"
+        },
+        {
+          "test": "Focus Styles for Accessibility",
+          "category": "css",
+          "success": true,
+          "details": "CSS includes focus-visible styles for keyboard navigation",
+          "timestamp": "2025-09-23T03:26:27.805Z"
+        },
+        {
+          "test": "Safe Area Support",
+          "category": "css",
+          "success": true,
+          "details": "CSS includes safe area utilities for modern mobile devices",
+          "timestamp": "2025-09-23T03:26:27.805Z"
+        },
+        {
+          "test": "Smooth Scrolling",
+          "category": "css",
+          "success": true,
+          "details": "CSS includes smooth scrolling for better UX",
+          "timestamp": "2025-09-23T03:26:27.805Z"
+        }
+      ],
+      "tailwind": [
+        {
+          "test": "Custom Breakpoints",
+          "category": "tailwind",
+          "success": true,
+          "details": "Tailwind config includes custom breakpoints for better responsive control",
+          "timestamp": "2025-09-23T03:26:27.805Z"
+        },
+        {
+          "test": "Touch Target Utilities",
+          "category": "tailwind",
+          "success": true,
+          "details": "Tailwind config includes custom touch target utilities",
+          "timestamp": "2025-09-23T03:26:27.806Z"
+        },
+        {
+          "test": "Safe Area Spacing",
+          "category": "tailwind",
+          "success": true,
+          "details": "Tailwind config includes safe area spacing utilities",
+          "timestamp": "2025-09-23T03:26:27.806Z"
+        },
+        {
+          "test": "Mobile-Friendly Animations",
+          "category": "tailwind",
+          "success": true,
+          "details": "Tailwind config includes custom animations for smooth interactions",
+          "timestamp": "2025-09-23T03:26:27.806Z"
+        }
+      ],
+      "components": [
+        {
+          "test": "Responsive Grids - quote-form",
+          "category": "components",
+          "success": true,
+          "details": "Found 3 responsive grid patterns",
+          "timestamp": "2025-09-23T03:26:27.807Z"
+        },
+        {
+          "test": "Responsive Spacing - quote-form",
+          "category": "components",
+          "success": false,
+          "details": "Found 0 responsive spacing patterns",
+          "timestamp": "2025-09-23T03:26:27.807Z"
+        },
+        {
+          "test": "Test ID Attributes - quote-form",
+          "category": "components",
+          "success": true,
+          "details": "Found 13 data-testid attributes for testing",
+          "timestamp": "2025-09-23T03:26:27.807Z"
+        },
+        {
+          "test": "Responsive Text - quote-form",
+          "category": "components",
+          "success": false,
+          "details": "Component includes responsive text sizing",
+          "timestamp": "2025-09-23T03:26:27.807Z"
+        },
+        {
+          "test": "Responsive Containers - quote-form",
+          "category": "components",
+          "success": true,
+          "details": "Component uses responsive max-width containers",
+          "timestamp": "2025-09-23T03:26:27.807Z"
+        },
+        {
+          "test": "Responsive Grids - photo-upload",
+          "category": "components",
+          "success": true,
+          "details": "Found 3 responsive grid patterns",
+          "timestamp": "2025-09-23T03:26:27.808Z"
+        },
+        {
+          "test": "Responsive Spacing - photo-upload",
+          "category": "components",
+          "success": false,
+          "details": "Found 0 responsive spacing patterns",
+          "timestamp": "2025-09-23T03:26:27.808Z"
+        },
+        {
+          "test": "Test ID Attributes - photo-upload",
+          "category": "components",
+          "success": true,
+          "details": "Found 4 data-testid attributes for testing",
+          "timestamp": "2025-09-23T03:26:27.808Z"
+        },
+        {
+          "test": "Responsive Text - photo-upload",
+          "category": "components",
+          "success": false,
+          "details": "Component includes responsive text sizing",
+          "timestamp": "2025-09-23T03:26:27.808Z"
+        },
+        {
+          "test": "Responsive Containers - photo-upload",
+          "category": "components",
+          "success": false,
+          "details": "Component uses responsive max-width containers",
+          "timestamp": "2025-09-23T03:26:27.808Z"
+        },
+        {
+          "test": "Responsive Grids - damage-assessment",
+          "category": "components",
+          "success": true,
+          "details": "Found 1 responsive grid patterns",
+          "timestamp": "2025-09-23T03:26:27.808Z"
+        },
+        {
+          "test": "Responsive Spacing - damage-assessment",
+          "category": "components",
+          "success": false,
+          "details": "Found 0 responsive spacing patterns",
+          "timestamp": "2025-09-23T03:26:27.809Z"
+        },
+        {
+          "test": "Test ID Attributes - damage-assessment",
+          "category": "components",
+          "success": true,
+          "details": "Found 6 data-testid attributes for testing",
+          "timestamp": "2025-09-23T03:26:27.809Z"
+        },
+        {
+          "test": "Responsive Text - damage-assessment",
+          "category": "components",
+          "success": false,
+          "details": "Component includes responsive text sizing",
+          "timestamp": "2025-09-23T03:26:27.809Z"
+        },
+        {
+          "test": "Responsive Containers - damage-assessment",
+          "category": "components",
+          "success": false,
+          "details": "Component uses responsive max-width containers",
+          "timestamp": "2025-09-23T03:26:27.809Z"
+        },
+        {
+          "test": "Responsive Grids - owner-dashboard",
+          "category": "components",
+          "success": true,
+          "details": "Found 4 responsive grid patterns",
+          "timestamp": "2025-09-23T03:26:27.809Z"
+        },
+        {
+          "test": "Responsive Spacing - owner-dashboard",
+          "category": "components",
+          "success": true,
+          "details": "Found 4 responsive spacing patterns",
+          "timestamp": "2025-09-23T03:26:27.809Z"
+        },
+        {
+          "test": "Test ID Attributes - owner-dashboard",
+          "category": "components",
+          "success": true,
+          "details": "Found 12 data-testid attributes for testing",
+          "timestamp": "2025-09-23T03:26:27.809Z"
+        },
+        {
+          "test": "Responsive Text - owner-dashboard",
+          "category": "components",
+          "success": false,
+          "details": "Component includes responsive text sizing",
+          "timestamp": "2025-09-23T03:26:27.809Z"
+        },
+        {
+          "test": "Responsive Containers - owner-dashboard",
+          "category": "components",
+          "success": true,
+          "details": "Component uses responsive max-width containers",
+          "timestamp": "2025-09-23T03:26:27.809Z"
+        },
+        {
+          "test": "Responsive Grids - customer-form",
+          "category": "components",
+          "success": false,
+          "details": "Found 0 responsive grid patterns",
+          "timestamp": "2025-09-23T03:26:27.810Z"
+        },
+        {
+          "test": "Responsive Spacing - customer-form",
+          "category": "components",
+          "success": true,
+          "details": "Found 4 responsive spacing patterns",
+          "timestamp": "2025-09-23T03:26:27.810Z"
+        },
+        {
+          "test": "Test ID Attributes - customer-form",
+          "category": "components",
+          "success": true,
+          "details": "Found 3 data-testid attributes for testing",
+          "timestamp": "2025-09-23T03:26:27.810Z"
+        },
+        {
+          "test": "Responsive Text - customer-form",
+          "category": "components",
+          "success": false,
+          "details": "Component includes responsive text sizing",
+          "timestamp": "2025-09-23T03:26:27.810Z"
+        },
+        {
+          "test": "Responsive Containers - customer-form",
+          "category": "components",
+          "success": true,
+          "details": "Component uses responsive max-width containers",
+          "timestamp": "2025-09-23T03:26:27.810Z"
+        }
+      ],
+      "api": [
+        {
+          "test": "API Endpoint - /api/settings",
+          "category": "api",
+          "success": false,
+          "details": "Status: 401",
+          "timestamp": "2025-09-23T03:26:27.867Z"
+        },
+        {
+          "test": "API Endpoint - /api/analytics",
+          "category": "api",
+          "success": true,
+          "details": "Status: 401",
+          "timestamp": "2025-09-23T03:26:27.872Z"
+        },
+        {
+          "test": "API Endpoint - /api/quotes",
+          "category": "api",
+          "success": true,
+          "details": "Status: 401",
+          "timestamp": "2025-09-23T03:26:27.875Z"
+        }
+      ],
+      "accessibility": [
+        {
+          "test": "ARIA Attributes",
+          "category": "accessibility",
+          "success": true,
+          "details": "Found 15 ARIA attributes across UI components",
+          "timestamp": "2025-09-23T03:26:27.887Z"
+        },
+        {
+          "test": "Focus States",
+          "category": "accessibility",
+          "success": true,
+          "details": "21/47 UI components have focus states",
+          "timestamp": "2025-09-23T03:26:27.887Z"
+        },
+        {
+          "test": "Keyboard Navigation Support",
+          "category": "accessibility",
+          "success": true,
+          "details": "2/47 components support keyboard navigation",
+          "timestamp": "2025-09-23T03:26:27.887Z"
+        }
+      ],
+      "hooks": [
+        {
+          "test": "Mobile Hook - matchMedia API",
+          "category": "hooks",
+          "success": true,
+          "details": "Hook uses matchMedia API for viewport detection",
+          "timestamp": "2025-09-23T03:26:27.888Z"
+        },
+        {
+          "test": "Mobile Hook - Breakpoint Detection",
+          "category": "hooks",
+          "success": false,
+          "details": "Hook includes proper mobile breakpoint detection",
+          "timestamp": "2025-09-23T03:26:27.888Z"
+        },
+        {
+          "test": "Mobile Hook - Responsive Updates",
+          "category": "hooks",
+          "success": true,
+          "details": "Hook includes event listeners for viewport changes",
+          "timestamp": "2025-09-23T03:26:27.888Z"
+        }
+      ],
+      "forms": [
+        {
+          "test": "Zod Schema Validation",
+          "category": "forms",
+          "success": true,
+          "details": "Forms use Zod for type-safe validation",
+          "timestamp": "2025-09-23T03:26:27.891Z"
+        },
+        {
+          "test": "React Hook Form Integration",
+          "category": "forms",
+          "success": true,
+          "details": "Forms use React Hook Form for efficient form handling",
+          "timestamp": "2025-09-23T03:26:27.891Z"
+        },
+        {
+          "test": "Error Display Patterns",
+          "category": "forms",
+          "success": true,
+          "details": "Found 24 error display patterns in forms",
+          "timestamp": "2025-09-23T03:26:27.891Z"
+        }
+      ]
+    }
+  },
+  "testResults": [
+    {
+      "test": "Mobile Media Queries Present",
+      "category": "css",
+      "success": true,
+      "details": "Found 1 mobile media queries",
+      "timestamp": "2025-09-23T03:26:27.804Z"
+    },
+    {
+      "test": "Touch Target Size Rules",
+      "category": "css",
+      "success": true,
+      "details": "CSS includes 44px minimum touch targets for mobile",
+      "timestamp": "2025-09-23T03:26:27.805Z"
+    },
+    {
+      "test": "Focus Styles for Accessibility",
+      "category": "css",
+      "success": true,
+      "details": "CSS includes focus-visible styles for keyboard navigation",
+      "timestamp": "2025-09-23T03:26:27.805Z"
+    },
+    {
+      "test": "Safe Area Support",
+      "category": "css",
+      "success": true,
+      "details": "CSS includes safe area utilities for modern mobile devices",
+      "timestamp": "2025-09-23T03:26:27.805Z"
+    },
+    {
+      "test": "Smooth Scrolling",
+      "category": "css",
+      "success": true,
+      "details": "CSS includes smooth scrolling for better UX",
+      "timestamp": "2025-09-23T03:26:27.805Z"
+    },
+    {
+      "test": "Custom Breakpoints",
+      "category": "tailwind",
+      "success": true,
+      "details": "Tailwind config includes custom breakpoints for better responsive control",
+      "timestamp": "2025-09-23T03:26:27.805Z"
+    },
+    {
+      "test": "Touch Target Utilities",
+      "category": "tailwind",
+      "success": true,
+      "details": "Tailwind config includes custom touch target utilities",
+      "timestamp": "2025-09-23T03:26:27.806Z"
+    },
+    {
+      "test": "Safe Area Spacing",
+      "category": "tailwind",
+      "success": true,
+      "details": "Tailwind config includes safe area spacing utilities",
+      "timestamp": "2025-09-23T03:26:27.806Z"
+    },
+    {
+      "test": "Mobile-Friendly Animations",
+      "category": "tailwind",
+      "success": true,
+      "details": "Tailwind config includes custom animations for smooth interactions",
+      "timestamp": "2025-09-23T03:26:27.806Z"
+    },
+    {
+      "test": "Responsive Grids - quote-form",
+      "category": "components",
+      "success": true,
+      "details": "Found 3 responsive grid patterns",
+      "timestamp": "2025-09-23T03:26:27.807Z"
+    },
+    {
+      "test": "Responsive Spacing - quote-form",
+      "category": "components",
+      "success": false,
+      "details": "Found 0 responsive spacing patterns",
+      "timestamp": "2025-09-23T03:26:27.807Z"
+    },
+    {
+      "test": "Test ID Attributes - quote-form",
+      "category": "components",
+      "success": true,
+      "details": "Found 13 data-testid attributes for testing",
+      "timestamp": "2025-09-23T03:26:27.807Z"
+    },
+    {
+      "test": "Responsive Text - quote-form",
+      "category": "components",
+      "success": false,
+      "details": "Component includes responsive text sizing",
+      "timestamp": "2025-09-23T03:26:27.807Z"
+    },
+    {
+      "test": "Responsive Containers - quote-form",
+      "category": "components",
+      "success": true,
+      "details": "Component uses responsive max-width containers",
+      "timestamp": "2025-09-23T03:26:27.807Z"
+    },
+    {
+      "test": "Responsive Grids - photo-upload",
+      "category": "components",
+      "success": true,
+      "details": "Found 3 responsive grid patterns",
+      "timestamp": "2025-09-23T03:26:27.808Z"
+    },
+    {
+      "test": "Responsive Spacing - photo-upload",
+      "category": "components",
+      "success": false,
+      "details": "Found 0 responsive spacing patterns",
+      "timestamp": "2025-09-23T03:26:27.808Z"
+    },
+    {
+      "test": "Test ID Attributes - photo-upload",
+      "category": "components",
+      "success": true,
+      "details": "Found 4 data-testid attributes for testing",
+      "timestamp": "2025-09-23T03:26:27.808Z"
+    },
+    {
+      "test": "Responsive Text - photo-upload",
+      "category": "components",
+      "success": false,
+      "details": "Component includes responsive text sizing",
+      "timestamp": "2025-09-23T03:26:27.808Z"
+    },
+    {
+      "test": "Responsive Containers - photo-upload",
+      "category": "components",
+      "success": false,
+      "details": "Component uses responsive max-width containers",
+      "timestamp": "2025-09-23T03:26:27.808Z"
+    },
+    {
+      "test": "Responsive Grids - damage-assessment",
+      "category": "components",
+      "success": true,
+      "details": "Found 1 responsive grid patterns",
+      "timestamp": "2025-09-23T03:26:27.808Z"
+    },
+    {
+      "test": "Responsive Spacing - damage-assessment",
+      "category": "components",
+      "success": false,
+      "details": "Found 0 responsive spacing patterns",
+      "timestamp": "2025-09-23T03:26:27.809Z"
+    },
+    {
+      "test": "Test ID Attributes - damage-assessment",
+      "category": "components",
+      "success": true,
+      "details": "Found 6 data-testid attributes for testing",
+      "timestamp": "2025-09-23T03:26:27.809Z"
+    },
+    {
+      "test": "Responsive Text - damage-assessment",
+      "category": "components",
+      "success": false,
+      "details": "Component includes responsive text sizing",
+      "timestamp": "2025-09-23T03:26:27.809Z"
+    },
+    {
+      "test": "Responsive Containers - damage-assessment",
+      "category": "components",
+      "success": false,
+      "details": "Component uses responsive max-width containers",
+      "timestamp": "2025-09-23T03:26:27.809Z"
+    },
+    {
+      "test": "Responsive Grids - owner-dashboard",
+      "category": "components",
+      "success": true,
+      "details": "Found 4 responsive grid patterns",
+      "timestamp": "2025-09-23T03:26:27.809Z"
+    },
+    {
+      "test": "Responsive Spacing - owner-dashboard",
+      "category": "components",
+      "success": true,
+      "details": "Found 4 responsive spacing patterns",
+      "timestamp": "2025-09-23T03:26:27.809Z"
+    },
+    {
+      "test": "Test ID Attributes - owner-dashboard",
+      "category": "components",
+      "success": true,
+      "details": "Found 12 data-testid attributes for testing",
+      "timestamp": "2025-09-23T03:26:27.809Z"
+    },
+    {
+      "test": "Responsive Text - owner-dashboard",
+      "category": "components",
+      "success": false,
+      "details": "Component includes responsive text sizing",
+      "timestamp": "2025-09-23T03:26:27.809Z"
+    },
+    {
+      "test": "Responsive Containers - owner-dashboard",
+      "category": "components",
+      "success": true,
+      "details": "Component uses responsive max-width containers",
+      "timestamp": "2025-09-23T03:26:27.809Z"
+    },
+    {
+      "test": "Responsive Grids - customer-form",
+      "category": "components",
+      "success": false,
+      "details": "Found 0 responsive grid patterns",
+      "timestamp": "2025-09-23T03:26:27.810Z"
+    },
+    {
+      "test": "Responsive Spacing - customer-form",
+      "category": "components",
+      "success": true,
+      "details": "Found 4 responsive spacing patterns",
+      "timestamp": "2025-09-23T03:26:27.810Z"
+    },
+    {
+      "test": "Test ID Attributes - customer-form",
+      "category": "components",
+      "success": true,
+      "details": "Found 3 data-testid attributes for testing",
+      "timestamp": "2025-09-23T03:26:27.810Z"
+    },
+    {
+      "test": "Responsive Text - customer-form",
+      "category": "components",
+      "success": false,
+      "details": "Component includes responsive text sizing",
+      "timestamp": "2025-09-23T03:26:27.810Z"
+    },
+    {
+      "test": "Responsive Containers - customer-form",
+      "category": "components",
+      "success": true,
+      "details": "Component uses responsive max-width containers",
+      "timestamp": "2025-09-23T03:26:27.810Z"
+    },
+    {
+      "test": "API Endpoint - /api/settings",
+      "category": "api",
+      "success": false,
+      "details": "Status: 401",
+      "timestamp": "2025-09-23T03:26:27.867Z"
+    },
+    {
+      "test": "API Endpoint - /api/analytics",
+      "category": "api",
+      "success": true,
+      "details": "Status: 401",
+      "timestamp": "2025-09-23T03:26:27.872Z"
+    },
+    {
+      "test": "API Endpoint - /api/quotes",
+      "category": "api",
+      "success": true,
+      "details": "Status: 401",
+      "timestamp": "2025-09-23T03:26:27.875Z"
+    },
+    {
+      "test": "ARIA Attributes",
+      "category": "accessibility",
+      "success": true,
+      "details": "Found 15 ARIA attributes across UI components",
+      "timestamp": "2025-09-23T03:26:27.887Z"
+    },
+    {
+      "test": "Focus States",
+      "category": "accessibility",
+      "success": true,
+      "details": "21/47 UI components have focus states",
+      "timestamp": "2025-09-23T03:26:27.887Z"
+    },
+    {
+      "test": "Keyboard Navigation Support",
+      "category": "accessibility",
+      "success": true,
+      "details": "2/47 components support keyboard navigation",
+      "timestamp": "2025-09-23T03:26:27.887Z"
+    },
+    {
+      "test": "Mobile Hook - matchMedia API",
+      "category": "hooks",
+      "success": true,
+      "details": "Hook uses matchMedia API for viewport detection",
+      "timestamp": "2025-09-23T03:26:27.888Z"
+    },
+    {
+      "test": "Mobile Hook - Breakpoint Detection",
+      "category": "hooks",
+      "success": false,
+      "details": "Hook includes proper mobile breakpoint detection",
+      "timestamp": "2025-09-23T03:26:27.888Z"
+    },
+    {
+      "test": "Mobile Hook - Responsive Updates",
+      "category": "hooks",
+      "success": true,
+      "details": "Hook includes event listeners for viewport changes",
+      "timestamp": "2025-09-23T03:26:27.888Z"
+    },
+    {
+      "test": "Zod Schema Validation",
+      "category": "forms",
+      "success": true,
+      "details": "Forms use Zod for type-safe validation",
+      "timestamp": "2025-09-23T03:26:27.891Z"
+    },
+    {
+      "test": "React Hook Form Integration",
+      "category": "forms",
+      "success": true,
+      "details": "Forms use React Hook Form for efficient form handling",
+      "timestamp": "2025-09-23T03:26:27.891Z"
+    },
+    {
+      "test": "Error Display Patterns",
+      "category": "forms",
+      "success": true,
+      "details": "Found 24 error display patterns in forms",
+      "timestamp": "2025-09-23T03:26:27.891Z"
+    }
+  ],
+  "issues": [],
+  "recommendations": [],
+  "timestamp": "2025-09-23T03:26:27.898Z"
+}
