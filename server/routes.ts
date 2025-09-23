@@ -352,11 +352,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Quote not available" });
       }
 
+      // Only expose public-safe information, exclude sensitive owner data
       res.json({
-        ...quote,
+        id: quote.id,
+        status: quote.status,
+        createdAt: quote.createdAt,
+        customerName: quote.customerName,
+        vehicleRego: quote.vehicleRego,
+        vehicleMake: quote.vehicleMake,
+        vehicleModel: quote.vehicleModel,
+        vehicleYear: quote.vehicleYear,
+        vehiclePaint: quote.vehiclePaint,
         items: JSON.parse(quote.itemsJson),
         calculation: JSON.parse(quote.calcJson),
         photos: quote.photosJson ? JSON.parse(quote.photosJson) : []
+        // Explicitly exclude: ownerNotes, ratesJson, customerPhone, customerEmail for privacy
       });
     } catch (error) {
       console.error('Public quote error:', error);
