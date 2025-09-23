@@ -75,6 +75,65 @@ export const testimonials = sqliteTable("testimonials", {
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`)
 });
 
+// Luminous Legends Story Management Tables
+export const characters = sqliteTable("characters", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  age: integer("age"),
+  role: text("role").notNull(),
+  description: text("description").notNull(),
+  auraColors: text("aura_colors").notNull(), // JSON field for primary/secondary aura colors
+  soulMirror: text("soul_mirror").notNull(), // JSON field for companion details
+  characterArc: text("character_arc").notNull(), // Growth progression
+  relationships: text("relationships").notNull(), // JSON field for connections to other characters
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`)
+});
+
+export const locations = sqliteTable("locations", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  significance: text("significance").notNull(),
+  connectedChapters: text("connected_chapters").notNull(), // JSON array of chapter IDs
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`)
+});
+
+export const chapters = sqliteTable("chapters", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  summary: text("summary").notNull(),
+  status: text("status", { enum: ["draft", "complete", "published"] }).notNull().default("draft"),
+  characterDevelopment: text("character_development").notNull(), // JSON field for character milestones
+  plotProgression: text("plot_progression").notNull(), // JSON field for plot markers
+  orderIndex: integer("order_index").notNull(), // Integer for chapter ordering
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`)
+});
+
+export const magicSystem = sqliteTable("magic_system", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: text("category", { enum: ["chakra", "spell", "ability"] }).notNull(),
+  requirements: text("requirements").notNull(), // JSON field for prerequisites
+  emotionalSkills: text("emotional_skills").notNull(), // JSON array for EQ skills
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`)
+});
+
+export const plotThreads = sqliteTable("plot_threads", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  status: text("status", { enum: ["active", "resolved", "paused"] }).notNull().default("active"),
+  characterInvolvement: text("character_involvement").notNull(), // JSON field for character roles
+  chapterSpan: text("chapter_span").notNull(), // JSON field for start/end chapters
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`)
+});
+
 // Validation schemas
 export const insertQuoteSchema = createInsertSchema(quotes).omit({
   id: true,
@@ -151,6 +210,37 @@ export const insertTestimonialSchema = createInsertSchema(testimonials).omit({
   createdAt: true
 });
 
+// Luminous Legends Story Management Validation Schemas
+export const insertCharacterSchema = createInsertSchema(characters).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertLocationSchema = createInsertSchema(locations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertChapterSchema = createInsertSchema(chapters).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertMagicSystemSchema = createInsertSchema(magicSystem).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPlotThreadSchema = createInsertSchema(plotThreads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 export const damageItemSchema = z.object({
   panel: z.string().min(1),
   severity: z.enum(["minor", "moderate", "severe"]),
@@ -190,3 +280,15 @@ export type QuoteCalculation = z.infer<typeof quoteCalculationSchema>;
 export type PinValidation = z.infer<typeof pinValidationSchema>;
 export type PinChange = z.infer<typeof pinChangeSchema>;
 export type FirstTimePinChange = z.infer<typeof firstTimePinChangeSchema>;
+
+// Luminous Legends Story Management Types
+export type Character = typeof characters.$inferSelect;
+export type InsertCharacter = z.infer<typeof insertCharacterSchema>;
+export type Location = typeof locations.$inferSelect;
+export type InsertLocation = z.infer<typeof insertLocationSchema>;
+export type Chapter = typeof chapters.$inferSelect;
+export type InsertChapter = z.infer<typeof insertChapterSchema>;
+export type MagicSystem = typeof magicSystem.$inferSelect;
+export type InsertMagicSystem = z.infer<typeof insertMagicSystemSchema>;
+export type PlotThread = typeof plotThreads.$inferSelect;
+export type InsertPlotThread = z.infer<typeof insertPlotThreadSchema>;
