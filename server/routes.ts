@@ -146,10 +146,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         ...quote,
-        items: JSON.parse(quote.itemsJson),
-        rates: JSON.parse(quote.ratesJson),
-        calculation: JSON.parse(quote.calcJson),
-        photos: quote.photosJson ? JSON.parse(quote.photosJson) : [],
+        items: quote.itemsJson && quote.itemsJson !== 'undefined' ? JSON.parse(quote.itemsJson) : [],
+        rates: quote.ratesJson && quote.ratesJson !== 'undefined' ? JSON.parse(quote.ratesJson) : {},
+        calculation: quote.calcJson && quote.calcJson !== 'undefined' ? JSON.parse(quote.calcJson) : null,
+        photos: quote.photosJson && quote.photosJson !== 'undefined' ? JSON.parse(quote.photosJson) : [],
         statusHistory
       });
     } catch (error) {
@@ -216,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate PDF and send email
       const settings = await storage.getSettings();
       const emailService = new EmailService(settings);
-      const calculation = JSON.parse(quote.calcJson);
+      const calculation = quote.calcJson && quote.calcJson !== 'undefined' ? JSON.parse(quote.calcJson) : null;
 
       const quoteUrl = `${settings.siteUrl}/q/${quote.customerLinkSlug}`;
       const pdfUrl = `${settings.siteUrl}/api/quote/${quote.id}/pdf`;
@@ -227,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           quote.customerName,
           quoteUrl,
           pdfUrl,
-          calculation.totalIncGST
+          calculation?.totalIncGST || 0
         );
 
         if (emailResult.success) {
@@ -255,11 +255,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const quotes = await storage.getAllQuotes();
       
-      const quotesWithCalculations = quotes.map(quote => ({
-        ...quote,
-        calculation: JSON.parse(quote.calcJson),
-        items: JSON.parse(quote.itemsJson)
-      }));
+      const quotesWithCalculations = quotes.map(quote => {
+        try {
+          return {
+            ...quote,
+            calculation: quote.calcJson && quote.calcJson !== 'undefined' ? JSON.parse(quote.calcJson) : null,
+            items: quote.itemsJson && quote.itemsJson !== 'undefined' ? JSON.parse(quote.itemsJson) : []
+          };
+        } catch (parseError) {
+          console.error(`JSON parse error for quote ${quote.id}:`, parseError);
+          return {
+            ...quote,
+            calculation: null,
+            items: []
+          };
+        }
+      });
 
       res.json(quotesWithCalculations);
     } catch (error) {
