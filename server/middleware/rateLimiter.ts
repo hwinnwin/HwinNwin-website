@@ -62,3 +62,4 @@ export class RateLimiter {
 
 export const quoteRateLimiter = new RateLimiter(5, 15 * 60 * 1000); // 5 requests per 15 minutes
 export const generalRateLimiter = new RateLimiter(50, 15 * 60 * 1000); // 50 requests per 15 minutes
+export const pinChangeRateLimiter = new RateLimiter(5, 15 * 60 * 1000); // 5 PIN change attempts per 15 minutes

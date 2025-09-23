@@ -13,7 +13,8 @@ export const settings = sqliteTable("settings", {
   minJob: real("min_job").notNull().default(220),
   logoUrl: text("logo_url").default("/static/lee-logo.png"),
   primaryColor: text("primary_color").default("#1E40AF"),
-  ownerPin: text("owner_pin").notNull().default("123456"),
+  ownerPin: text("owner_pin").notNull(),
+  isDefaultPin: integer("is_default_pin", { mode: "boolean" }).notNull().default(true),
   sendgridApiKey: text("sendgrid_api_key"),
   fromEmail: text("from_email").default("quotes@leemurdokpanels.com.au"),
   siteUrl: text("site_url").default("https://lee888.com.au"),
@@ -100,6 +101,51 @@ export const insertSettingsSchema = createInsertSchema(settings).omit({
   updatedAt: true
 });
 
+// PIN validation schema with strong security requirements
+export const pinValidationSchema = z.object({
+  pin: z.string()
+    .min(8, "PIN must be at least 8 characters long")
+    .max(20, "PIN must be no more than 20 characters long")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/, 
+           "PIN must contain at least one lowercase letter, one uppercase letter, one number, and one special character")
+    .refine(pin => pin !== "123456" && pin !== "password" && pin !== "12345678", 
+           "PIN cannot be a common weak password")
+});
+
+// PIN change schema with current PIN verification
+export const pinChangeSchema = z.object({
+  currentPin: z.string().min(1, "Current PIN is required"),
+  newPin: z.string()
+    .min(8, "New PIN must be at least 8 characters long")
+    .max(20, "New PIN must be no more than 20 characters long")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/, 
+           "New PIN must contain at least one lowercase letter, one uppercase letter, one number, and one special character")
+    .refine(pin => pin !== "123456" && pin !== "password" && pin !== "12345678", 
+           "New PIN cannot be a common weak password"),
+  confirmPin: z.string()
+}).refine(data => data.newPin === data.confirmPin, {
+  message: "PIN confirmation does not match",
+  path: ["confirmPin"]
+}).refine(data => data.currentPin !== data.newPin, {
+  message: "New PIN must be different from current PIN",
+  path: ["newPin"]
+});
+
+// First-time PIN change schema (for fresh installations)
+export const firstTimePinChangeSchema = z.object({
+  newPin: z.string()
+    .min(8, "New PIN must be at least 8 characters long")
+    .max(20, "New PIN must be no more than 20 characters long")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/, 
+           "New PIN must contain at least one lowercase letter, one uppercase letter, one number, and one special character")
+    .refine(pin => pin !== "123456" && pin !== "password" && pin !== "12345678", 
+           "New PIN cannot be a common weak password"),
+  confirmPin: z.string()
+}).refine(data => data.newPin === data.confirmPin, {
+  message: "PIN confirmation does not match",
+  path: ["confirmPin"]
+});
+
 export const insertTestimonialSchema = createInsertSchema(testimonials).omit({
   id: true,
   createdAt: true
@@ -141,3 +187,6 @@ export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
 export type QuoteStatusHistory = typeof quoteStatusHistory.$inferSelect;
 export type DamageItem = z.infer<typeof damageItemSchema>;
 export type QuoteCalculation = z.infer<typeof quoteCalculationSchema>;
+export type PinValidation = z.infer<typeof pinValidationSchema>;
+export type PinChange = z.infer<typeof pinChangeSchema>;
+export type FirstTimePinChange = z.infer<typeof firstTimePinChangeSchema>;
