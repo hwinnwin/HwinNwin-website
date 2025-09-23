@@ -5,6 +5,7 @@ import fs from "fs";
 import type { 
   Quote, 
   InsertQuote, 
+  InsertQuoteForStorage,
   Settings, 
   InsertSettings, 
   Testimonial, 
@@ -16,7 +17,7 @@ import type {
 
 export interface IStorage {
   // Quotes
-  createQuote(quote: InsertQuote): Promise<Quote>;
+  createQuote(quote: InsertQuoteForStorage): Promise<Quote>;
   getQuote(id: string): Promise<Quote | undefined>;
   getQuoteBySlug(slug: string): Promise<Quote | undefined>;
   getAllQuotes(): Promise<Quote[]>;
@@ -146,7 +147,7 @@ export class SqliteStorage implements IStorage {
     return result;
   }
 
-  async createQuote(insertQuote: InsertQuote): Promise<Quote> {
+  async createQuote(insertQuote: InsertQuoteForStorage): Promise<Quote> {
     const id = randomUUID();
     const slug = this.generateSlug();
     const now = new Date().toISOString();
@@ -164,7 +165,7 @@ export class SqliteStorage implements IStorage {
       vehicleModel: insertQuote.vehicleModel,
       vehicleYear: insertQuote.vehicleYear,
       vehiclePaint: insertQuote.vehiclePaint,
-      itemsJson: JSON.stringify(insertQuote.items),
+      itemsJson: insertQuote.itemsJson,
       ratesJson: insertQuote.ratesJson,
       calcJson: insertQuote.calcJson,
       photosJson: insertQuote.photos ? JSON.stringify(insertQuote.photos) : null,

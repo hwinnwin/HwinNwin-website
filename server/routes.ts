@@ -103,6 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create quote
       const quote = await storage.createQuote({
         ...quoteData,
+        itemsJson: JSON.stringify(quoteData.items),
         ratesJson: JSON.stringify(rates),
         calcJson: JSON.stringify(calculation),
         photos: photoFilenames

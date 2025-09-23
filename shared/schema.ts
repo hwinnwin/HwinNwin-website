@@ -79,7 +79,11 @@ export const insertQuoteSchema = createInsertSchema(quotes).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-  customerLinkSlug: true
+  customerLinkSlug: true,
+  itemsJson: true,  // Omit server-generated fields
+  ratesJson: true,
+  calcJson: true,
+  photosJson: true
 }).extend({
   items: z.array(z.object({
     panel: z.string().min(1),
@@ -124,6 +128,12 @@ export const quoteCalculationSchema = z.object({
 // Types
 export type Quote = typeof quotes.$inferSelect;
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;
+export type InsertQuoteForStorage = InsertQuote & {
+  itemsJson: string;
+  ratesJson: string;
+  calcJson: string;
+  photos: string[];
+};
 export type Settings = typeof settings.$inferSelect;
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;
 export type Testimonial = typeof testimonials.$inferSelect;
