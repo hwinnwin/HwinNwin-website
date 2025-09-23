@@ -1,0 +1,41 @@
+✅ Confirmed good
+	•	Customer form + photo validation (≥640px, ≤8MB, basic blur check)
+	•	Panel + severity + blend per item
+	•	SQLite with Quote + Settings (UUID/ULID fine)
+	•	AUD display with Subtotal ex-GST / GST 10% / Total inc-GST
+	•	Owner-in-the-loop: no pricing visible to customer until approved
+	•	OWNER_PIN (4–6 digits) for dashboard access
+	•	Quote calc + confidence score (high/low)
+	•	Owner dashboard for rates (labour, materials, parts markup, metallic/pearlescent)
+	•	Review/edit UI, owner notes, approval toggle
+	•	HTML quote + PDF export
+	•	Public /q/:slug links for approved quotes
+	•	Email send (SendGrid)
+	•	Minimal analytics (counts + averages)
+	•	Testimonial capture (rating + comment)
+
+🛠 Tiny additions to make it smoother
+	1.	Storage abstraction: local uploads for now, but wrap with a pluggable interface so you can switch to Cloudinary/S3 later without refactoring.
+	2.	EXIF orientation: auto-rotate images on upload (phones often save rotated).
+	3.	Slug hardening: use a random, non-guessable slug (e.g., 10–12 char base62) and only expose approved quotes.
+	4.	Terms & checkbox: “Provisional estimate; final price after inspection” + “photos are representative” checkbox.
+	5.	Owner settings persistence: ensure edited rates/theme persist and new quotes snapshot the rates used.
+	6.	PDF fallback: if PDF service/env fails, at least allow HTML-to-print and “Copy HTML” so you’re never blocked.
+	7.	SendGrid env + fail-gracefully: if missing creds, still generate link/PDF and show a “copy email” button.
+	8.	Basic abuse guard: simple rate-limit on /api/quote and a hidden honeypot field to reduce spam.
+	9.	Accessibility & mobile: big tap targets, form labels, basic aria; this will be used on phones in a car park.
+	10.	Owner PIN UX: allow changing PIN in Settings (with current PIN confirmation).
+	11.	Image checklist UI: nudge for 6 angles + close-ups; show which are still missing.
+	12.	Confidence rules: treat “any severe” OR “>2 panels” OR “missing key photos” as low with a clear banner.
+	13.	Analytics extras (nice-to-have): conversion from “awaiting approval” → “approved”, last 7 days.
+	14.	Testimonial consent: checkbox to allow use on website/promo.
+
+✅ Quick acceptance checklist (use this to test the build)
+	•	Submit a job → customer sees “Awaiting Owner Approval” (no prices).
+	•	Open dashboard with OWNER_PIN → edit rates/items → approve.
+	•	Quote shows Subtotal/GST/Total in AUD; numbers match your calc.
+	•	A PDF downloads and a public link /q/:slug works (read-only).
+	•	Settings (rates/theme/PIN) persist across restart.
+	•	Uploading a tiny/huge/blurred photo triggers validation messages.
+	•	Confidence badge flips to Low for complex/missing-photo cases.
+	•	Email send works with SendGrid; if creds absent, app still provides the link/PDF.

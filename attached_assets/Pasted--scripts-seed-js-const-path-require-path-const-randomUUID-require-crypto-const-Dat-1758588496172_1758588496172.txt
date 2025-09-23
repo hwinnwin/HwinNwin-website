@@ -1,0 +1,148 @@
+// scripts/seed.js
+const path = require('path');
+const { randomUUID } = require('crypto');
+const Database = require('better-sqlite3');
+
+const dbPath = path.join(__dirname, '..', 'data', 'app.db');
+const db = new Database(dbPath);
+
+const now = new Date().toISOString();
+
+// --- Default Settings (editable by owner) ---
+const settings = {
+  labourRate: 120,             // AUD/hr
+  materialsPerPanel: 85,       // AUD
+  partsMarkup: 0.15,           // 15%
+  metallicMultiplier: 1.15,
+  pearlescentMultiplier: 1.25,
+  minJob: 220,                 // AUD
+  logoUrl: "/static/lee-logo.png", // swap with real logo path
+  primaryColor: "#111111"
+};
+
+db.prepare(`
+  INSERT INTO Settings
+  (id, labourRate, materialsPerPanel, partsMarkup, metallicMultiplier, pearlescentMultiplier, minJob, logoUrl, primaryColor, createdAt, updatedAt)
+  VALUES (1, @labourRate, @materialsPerPanel, @partsMarkup, @metallicMultiplier, @pearlescentMultiplier, @minJob, @logoUrl, @primaryColor, @createdAt, @updatedAt)
+  ON CONFLICT(id) DO UPDATE SET
+    labourRate=excluded.labourRate,
+    materialsPerPanel=excluded.materialsPerPanel,
+    partsMarkup=excluded.partsMarkup,
+    metallicMultiplier=excluded.metallicMultiplier,
+    pearlescentMultiplier=excluded.pearlescentMultiplier,
+    minJob=excluded.minJob,
+    logoUrl=excluded.logoUrl,
+    primaryColor=excluded.primaryColor,
+    updatedAt=excluded.updatedAt
+`).run({ ...settings, createdAt: now, updatedAt: now });
+
+// --- Demo Quote (awaiting approval) ---
+const quoteId = randomUUID();
+
+// Example items
+const items = [
+  { panel: "Front Bumper", severity: "moderate", partsCost: 0, blend: true },
+  { panel: "Left Fender",  severity: "minor",    partsCost: 0, blend: false }
+];
+
+// Heuristics (mirror the frontend logic)
+const severityTable = {
+  minor:    { repairHrs: 1.5, paintHrs: 0.8, replace: false, blendDefault: false },
+  moderate: { repairHrs: 3.0, paintHrs: 1.6, replace: false, blendDefault: true  },
+  severe:   { repairHrs: 0.0, paintHrs: 2.2, replace: true,  blendDefault: true  }
+};
+
+function calcTotals(items, paintType, rates) {
+  let repairHrs = 0, paintHrs = 0, materials = 0, parts = 0, blendPanels = 0;
+  const paintMult =
+    paintType === 'metallic' ? rates.metallicMultiplier :
+    paintType === 'pearlescent' ? rates.pearlescentMultiplier : 1;
+
+  for (const it of items) {
+    const sev = severityTable[it.severity] || severityTable.minor;
+    const rH = sev.replace ? 0 : sev.repairHrs;
+    const pH = sev.paintHrs * paintMult;
+    repairHrs += rH;
+    paintHrs  += pH;
+    materials += rates.materialsPerPanel;
+    parts     += (it.partsCost || 0) * (1 + rates.partsMarkup);
+    if (it.blend || sev.blendDefault) blendPanels += 1;
+  }
+
+  // Simple blend rule
+  paintHrs += blendPanels * 0.6;
+  materials += blendPanels * (rates.materialsPerPanel * 0.5);
+
+  const labour = (repairHrs + paintHrs) * rates.labourRate;
+  const subtotalExGST = Math.max(labour + materials + parts, rates.minJob);
+  const gst = +(subtotalExGST * 0.10).toFixed(2);
+  const totalIncGST = +(subtotalExGST + gst).toFixed(2);
+
+  const confidence =
+    items.length > 2 || items.some(i => i.severity === 'severe') ? 'low' : 'high';
+
+  return {
+    repairHrs: +repairHrs.toFixed(1),
+    paintHrs: +paintHrs.toFixed(1),
+    labour: +labour.toFixed(2),
+    materials: +materials.toFixed(2),
+    parts: +parts.toFixed(2),
+    subtotalExGST: +subtotalExGST.toFixed(2),
+    gst,
+    totalIncGST,
+    blendPanels,
+    confidence
+  };
+}
+
+const ratesSnapshot = { ...settings };
+const calc = calcTotals(items, 'metallic', ratesSnapshot);
+
+const customer = {
+  name:  "Demo Customer",
+  phone: "0400 000 000",
+  email: "customer@example.com"
+};
+const vehicle = {
+  rego: "LEE888",
+  make: "Toyota",
+  model: "Corolla",
+  year: "2018",
+  paint: "metallic"
+};
+
+db.prepare(`
+  INSERT INTO Quote (
+    id, status, createdAt, updatedAt,
+    customerName, customerPhone, customerEmail,
+    vehicleRego, vehicleMake, vehicleModel, vehicleYear, vehiclePaint,
+    itemsJson, ratesJson, calcJson,
+    ownerNotes, customerLinkSlug
+  ) VALUES (
+    @id, 'new', @now, @now,
+    @customerName, @customerPhone, @customerEmail,
+    @vehicleRego, @vehicleMake, @vehicleModel, @vehicleYear, @vehiclePaint,
+    @itemsJson, @ratesJson, @calcJson,
+    @ownerNotes, @slug
+  )
+`).run({
+  id: quoteId,
+  now,
+  customerName: customer.name,
+  customerPhone: customer.phone,
+  customerEmail: customer.email,
+  vehicleRego: vehicle.rego,
+  vehicleMake: vehicle.make,
+  vehicleModel: vehicle.model,
+  vehicleYear: vehicle.year,
+  vehiclePaint: vehicle.paint,
+  itemsJson: JSON.stringify(items),
+  ratesJson: JSON.stringify(ratesSnapshot),
+  calcJson: JSON.stringify(calc),
+  ownerNotes: "Seeded quote – awaiting owner approval.",
+  slug: 'demo-' + quoteId.slice(0, 8)
+});
+
+console.log('Seed complete. Settings + 1 demo quote inserted.');
+console.table([{ quoteId, status: 'new', totalIncGST: calc.totalIncGST }]);
+db.close();

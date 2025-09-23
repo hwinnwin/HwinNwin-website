@@ -1,0 +1,75 @@
+Add/adjust the following requirements to the app:
+
+1) Currency & Tax (Australia)
+- All money in AUD. Display "AUD $" and include GST (10%).
+- Show Subtotal (ex-GST), GST (10%), and Total (inc GST) in summaries and on the quote.
+
+2) Owner-in-the-loop Approval
+- Customer never sees the dollar amount until owner approves.
+- Flow: Customer submits ➜ internal provisional estimate ➜ owner reviews/edits ➜ owner toggles "Approved" ➜ customer gets final quote link/PDF.
+- Simple owner access: 4–6 digit OWNER_PIN required to open the dashboard.
+
+3) Persistence (DB)
+- Use SQLite for MVP.
+- Data models:
+  - Quote(id ULID or UUID, createdAt, updatedAt, status: 'new'|'approved'|'sent',
+          customer{name, phone, email}, vehicle{rego, make, model, year, paint},
+          items[ {panel, severity, partsCost, blend:boolean} ],
+          rates{labourRate, materialsPerPanel, partsMarkup, metallicMultiplier, pearlescentMultiplier, minJob},
+          calc{repairHrs, paintHrs, labour, materials, parts, subtotalExGST, gst, totalIncGST, confidence: 'high'|'low'},
+          ownerNotes, customerLinkSlug)
+  - Settings(singleton): default rates and theme (logoUrl, primaryColor).
+
+4) Calculation Rules
+- Continue using current heuristics; add:
+  - GST = 10% of subtotalExGST.
+  - Confidence flag = 'low' if: >2 panels OR any 'severe' OR missing critical photos.
+  - Blend toggle per item; blending adds 0.6 paint hr and 50% materials for each blended panel.
+
+5) Image Handling
+- Validate uploads: warn if < 640px shorter side OR file > 8MB OR likely blurry (use browser image decode + edge variance heuristic).
+- Store file names/URLs in DB; for MVP keep in /uploads (server) and serve statically.
+- Abstract storage so we can swap to Cloudinary/S3 later.
+
+6) Sharing & Export
+- After approval:
+  - Generate a branded HTML quote and a downloadable PDF (simple server-side HTML-to-PDF lib).
+  - Send email via EmailJS (client) OR a minimal server mailer (e.g., nodemailer) using ENV vars.
+  - Create a public customer link: /q/:slug (read-only view).
+
+7) Legal/UX
+- Include disclaimer on forms and quotes: "Provisional estimate only. Final price may change after physical inspection."
+- Require checkbox "I confirm photos are representative".
+- Display a small "Confidence" badge (High/Low) to the owner.
+
+8) Rates & Theme Persistence
+- Owner can edit rates in dashboard; persist in Settings table.
+- Theme variables (logoUrl, primaryColor) editable; apply to header, buttons, and PDF.
+
+9) Minimal Analytics (owner-only)
+- Show counts: total quotes, approved quotes, average total, last 7 days submissions.
+
+10) Testimonial Capture (owner-only)
+- After sending, show a one-click "Request Testimonial" email with a link to a simple form (name, rating 1–5, comment). Store results in DB.
+
+11) API & Routes
+- REST endpoints:
+  - POST /api/quote (create from customer form)
+  - GET  /api/quote/:id (internal)
+  - PATCH /api/quote/:id (owner edits)
+  - POST /api/quote/:id/approve (requires OWNER_PIN)
+  - GET  /q/:slug (public read-only customer view)
+  - GET  /api/quote/:id/pdf (returns PDF)
+  - GET/POST /api/settings (owner)
+- Add simple OWNER_PIN middleware for owner routes.
+
+12) Env & Config
+- .env: OWNER_PIN=123456, EMAIL_HOST/USER/PASS (if using nodemailer), SITE_URL (e.g., https://lee888.com.au).
+- Fail gracefully if email creds are missing (still allow PDF download and copy link).
+
+Acceptance:
+- I can submit a job, see "Awaiting Owner Approval".
+- Owner enters PIN, adjusts numbers, approves.
+- App shows Subtotal (ex-GST), GST, Total (inc GST). Numbers in AUD.
+- A PDF is available and a shareable public link is generated.
+- Settings persist across restarts. New quotes default to saved rates and theme.
