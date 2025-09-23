@@ -202,8 +202,26 @@ export class SqliteStorage implements IStorage {
     const result = this.db.prepare("SELECT * FROM quotes WHERE id = ?").get(id) as any;
     if (!result) return undefined;
     
+    // Map snake_case database fields to camelCase application fields
     return {
-      ...result,
+      id: result.id,
+      status: result.status,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at,
+      customerName: result.customer_name,
+      customerPhone: result.customer_phone,
+      customerEmail: result.customer_email,
+      vehicleRego: result.vehicle_rego,
+      vehicleMake: result.vehicle_make,
+      vehicleModel: result.vehicle_model,
+      vehicleYear: result.vehicle_year,
+      vehiclePaint: result.vehicle_paint,
+      itemsJson: result.items_json,
+      ratesJson: result.rates_json,
+      calcJson: result.calc_json,
+      photosJson: result.photos_json,
+      ownerNotes: result.owner_notes,
+      customerLinkSlug: result.customer_link_slug,
       photosRepresentativeConfirmed: Boolean(result.photos_representative_confirmed),
       provisionalEstimateConfirmed: Boolean(result.provisional_estimate_confirmed)
     };
