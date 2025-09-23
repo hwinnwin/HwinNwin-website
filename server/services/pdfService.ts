@@ -8,9 +8,33 @@ export class PDFService {
   }
 
   generateQuoteHTML(quote: Quote): string {
-    const items: DamageItem[] = JSON.parse(quote.itemsJson);
-    const calc: QuoteCalculation = JSON.parse(quote.calcJson);
-    const photos: string[] = quote.photosJson ? JSON.parse(quote.photosJson) : [];
+    // Debug logging removed for security
+
+    // Handle undefined string literals and null values with more robust checking
+    let items: DamageItem[] = [];
+    try {
+      items = quote.itemsJson && quote.itemsJson !== 'undefined' && quote.itemsJson !== 'null' && quote.itemsJson.trim() ? JSON.parse(quote.itemsJson) : [];
+    } catch (e) {
+      console.error('Items JSON parse error:', e);
+      items = [];
+    }
+
+    let calc: QuoteCalculation = {
+      repairHrs: 0, paintHrs: 0, labour: 0, materials: 0, parts: 0,
+      subtotalExGST: 0, gst: 0, totalIncGST: 0, blendPanels: 0, confidence: 'low'
+    };
+    try {
+      calc = quote.calcJson && quote.calcJson !== 'undefined' && quote.calcJson !== 'null' && quote.calcJson.trim() ? JSON.parse(quote.calcJson) : calc;
+    } catch (e) {
+      console.error('Calc JSON parse error:', e);
+    }
+
+    let photos: string[] = [];
+    try {
+      photos = quote.photosJson && quote.photosJson !== 'undefined' && quote.photosJson !== 'null' && quote.photosJson.trim() ? JSON.parse(quote.photosJson) : [];
+    } catch (e) {
+      console.error('Photos JSON parse error:', e);
+    }
 
     return `
 <!DOCTYPE html>
@@ -158,7 +182,7 @@ export class PDFService {
     <div style="text-align: center; margin-bottom: 30px;">
         <h2>Vehicle Damage Quote</h2>
         <p><strong>Quote ID:</strong> ${quote.id}</p>
-        <p><strong>Date:</strong> ${new Date(quote.createdAt).toLocaleDateString('en-AU')}</p>
+        <p><strong>Date:</strong> ${new Date(quote.createdAt || Date.now()).toLocaleDateString('en-AU')}</p>
         <div class="confidence-badge confidence-${calc.confidence}">
             ${calc.confidence.toUpperCase()} CONFIDENCE
         </div>
@@ -176,7 +200,7 @@ export class PDFService {
             <h3>Vehicle Details</h3>
             <p><strong>Registration:</strong> ${quote.vehicleRego}</p>
             <p><strong>Make & Model:</strong> ${quote.vehicleYear} ${quote.vehicleMake} ${quote.vehicleModel}</p>
-            <p><strong>Paint Type:</strong> ${quote.vehiclePaint.charAt(0).toUpperCase() + quote.vehiclePaint.slice(1)}</p>
+            <p><strong>Paint Type:</strong> ${quote.vehiclePaint ? quote.vehiclePaint.charAt(0).toUpperCase() + quote.vehiclePaint.slice(1) : 'Unknown'}</p>
         </div>
     </div>
 
@@ -197,28 +221,28 @@ export class PDFService {
     <div class="quote-calculation">
         <h3>Quote Breakdown</h3>
         <div class="calc-row">
-            <span>Labour (${calc.repairHrs} repair + ${calc.paintHrs} paint hours @ AUD $${JSON.parse(quote.ratesJson).labourRate}/hr):</span>
-            <span>AUD $${calc.labour.toFixed(2)}</span>
+            <span>Labour (${calc.repairHrs || 0} repair + ${calc.paintHrs || 0} paint hours @ AUD $${JSON.parse(quote.ratesJson || '{"labourRate": 0}').labourRate || 0}/hr):</span>
+            <span>AUD $${(calc.labour || 0).toFixed(2)}</span>
         </div>
         <div class="calc-row">
-            <span>Materials (${items.length} panels${calc.blendPanels > 0 ? ` + ${calc.blendPanels} blend` : ''}):</span>
-            <span>AUD $${calc.materials.toFixed(2)}</span>
+            <span>Materials (${items.length} panels${(calc.blendPanels || 0) > 0 ? ` + ${calc.blendPanels} blend` : ''}):</span>
+            <span>AUD $${(calc.materials || 0).toFixed(2)}</span>
         </div>
         <div class="calc-row">
             <span>Parts & Components:</span>
-            <span>AUD $${calc.parts.toFixed(2)}</span>
+            <span>AUD $${(calc.parts || 0).toFixed(2)}</span>
         </div>
         <div class="calc-row">
             <span><strong>Subtotal (ex-GST):</strong></span>
-            <span><strong>AUD $${calc.subtotalExGST.toFixed(2)}</strong></span>
+            <span><strong>AUD $${(calc.subtotalExGST || 0).toFixed(2)}</strong></span>
         </div>
         <div class="calc-row">
             <span>GST (10%):</span>
-            <span>AUD $${calc.gst.toFixed(2)}</span>
+            <span>AUD $${(calc.gst || 0).toFixed(2)}</span>
         </div>
         <div class="calc-row total">
             <span>TOTAL (inc-GST):</span>
-            <span>AUD $${calc.totalIncGST.toFixed(2)}</span>
+            <span>AUD $${(calc.totalIncGST || 0).toFixed(2)}</span>
         </div>
     </div>
 
@@ -249,14 +273,19 @@ export class PDFService {
     `;
   }
 
-  async generatePDF(quote: Quote): Promise<Buffer> {
-    // For now, return the HTML as text buffer
-    // In production, use puppeteer or similar to generate actual PDF
+  async generateHTML(quote: Quote): Promise<Buffer> {
+    // Generate HTML preview of the quote
     const html = this.generateQuoteHTML(quote);
     return Buffer.from(html, 'utf-8');
   }
 
+  // Deprecated: Use generateHTML instead
+  async generatePDF(quote: Quote): Promise<Buffer> {
+    return this.generateHTML(quote);
+  }
+
   getQuoteFileName(quote: Quote): string {
-    return `quote-${quote.id.slice(0, 8)}-${quote.vehicleRego}.pdf`;
+    const vehicleRego = quote.vehicleRego || 'unknown-vehicle';
+    return `quote-${quote.id.slice(0, 8)}-${vehicleRego}.html`;
   }
 }

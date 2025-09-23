@@ -307,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate PDF (owner and public for approved quotes)
+  // Generate HTML preview (owner and public for approved quotes)
   app.get('/api/quote/:id/pdf', async (req, res) => {
     try {
       const quote = await storage.getQuote(req.params.id);
@@ -323,18 +323,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const settings = await storage.getSettings();
+      // Debug logging removed for security
+      
       const pdfService = new PDFService(settings);
       
       const pdfBuffer = await pdfService.generatePDF(quote);
       const filename = pdfService.getQuoteFileName(quote);
 
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
       res.send(pdfBuffer);
 
     } catch (error) {
-      console.error('PDF generation error:', error);
-      res.status(500).json({ message: "Failed to generate PDF" });
+      console.error('HTML generation error:', error);
+      res.status(500).json({ message: "Failed to generate HTML preview" });
     }
   });
 
