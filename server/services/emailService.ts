@@ -36,13 +36,18 @@ export class EmailService {
     }
 
     try {
-      await sgMail.send({
+      const emailData: any = {
         to: params.to,
         from: params.from,
         subject: params.subject,
-        text: params.text,
         html: params.html,
-      });
+      };
+      
+      if (params.text) {
+        emailData.text = params.text;
+      }
+      
+      await sgMail.send(emailData);
       
       return { success: true };
     } catch (error) {

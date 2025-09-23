@@ -1,10 +1,60 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Trust proxy for production environments (required for secure cookies behind proxies)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Validate session secret in production
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET environment variable is required in production');
+}
+
+// Configure session store - use MemoryStore for dev, PostgreSQL only if DATABASE_URL exists
+let sessionStore;
+if (process.env.DATABASE_URL) {
+  const PgSession = connectPgSimple(session);
+  sessionStore = new PgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'session',
+    createTableIfMissing: true
+  });
+  log('Using PostgreSQL session store');
+} else {
+  const MemStoreSession = MemoryStore(session);
+  sessionStore = new MemStoreSession({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  });
+  log('Using MemoryStore session store');
+}
+
+// Session middleware configuration with security improvements
+app.use(session({
+  store: sessionStore,
+  secret: process.env.SESSION_SECRET || (process.env.NODE_ENV === 'production' ? 
+    (() => { throw new Error('SESSION_SECRET required in production') })() :
+    'dev-session-secret-change-in-production'
+  ),
+  resave: false,
+  saveUninitialized: false,
+  rolling: true,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax', // Prevent CSRF attacks
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();

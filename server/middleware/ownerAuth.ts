@@ -1,6 +1,13 @@
 import type { Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
 
+// Extend the session interface
+declare module 'express-session' {
+  interface SessionData {
+    isOwner?: boolean;
+  }
+}
+
 export async function requireOwnerPin(req: Request, res: Response, next: NextFunction) {
   try {
     const pin = req.body.ownerPin || req.headers['x-owner-pin'];
