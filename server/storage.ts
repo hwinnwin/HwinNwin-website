@@ -171,8 +171,8 @@ export class SqliteStorage implements IStorage {
       photosJson: insertQuote.photos ? JSON.stringify(insertQuote.photos) : null,
       ownerNotes: null,
       customerLinkSlug: slug,
-      photosRepresentativeConfirmed: insertQuote.photosRepresentativeConfirmed,
-      provisionalEstimateConfirmed: insertQuote.provisionalEstimateConfirmed
+      photosRepresentativeConfirmed: insertQuote.photosRepresentativeConfirmed ?? false,
+      provisionalEstimateConfirmed: insertQuote.provisionalEstimateConfirmed ?? false
     };
 
     this.db.prepare(`
@@ -284,7 +284,28 @@ export class SqliteStorage implements IStorage {
 
   async getSettings(): Promise<Settings> {
     const result = this.db.prepare("SELECT * FROM settings WHERE id = 1").get() as any;
-    return result;
+    if (!result) {
+      throw new Error("Settings not found");
+    }
+    
+    // Map database column names (snake_case) to object properties (camelCase)
+    return {
+      id: result.id,
+      labourRate: result.labour_rate,
+      materialsPerPanel: result.materials_per_panel,
+      partsMarkup: result.parts_markup,
+      metallicMultiplier: result.metallic_multiplier,
+      pearlescentMultiplier: result.pearlescent_multiplier,
+      minJob: result.min_job,
+      logoUrl: result.logo_url,
+      primaryColor: result.primary_color,
+      ownerPin: result.owner_pin,
+      sendgridApiKey: result.sendgrid_api_key,
+      fromEmail: result.from_email,
+      siteUrl: result.site_url,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at
+    };
   }
 
   async updateSettings(settings: Partial<InsertSettings>): Promise<Settings> {

@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import express from "express";
+
 import path from "path";
 import { storage } from "./storage";
 import { EmailService } from "./services/emailService";
@@ -357,10 +358,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const settings = await storage.getSettings();
       
       if (pin === settings.ownerPin) {
+        // Regenerate session ID to prevent session fixation attacks
         if (req.session) {
-          req.session.isOwner = true;
+          req.session.regenerate((err) => {
+            if (err) {
+              console.error('Session regeneration error:', err);
+              return res.status(500).json({ message: "Authentication error" });
+            }
+            
+            // Set the isOwner flag on the new session
+            req.session.isOwner = true;
+            
+            // Save the session
+            req.session.save((saveErr) => {
+              if (saveErr) {
+                console.error('Session save error:', saveErr);
+                return res.status(500).json({ message: "Authentication error" });
+              }
+              
+              res.json({ message: "Authentication successful" });
+            });
+          });
+        } else {
+          res.status(500).json({ message: "Session not available" });
         }
-        res.json({ message: "Authentication successful" });
       } else {
         res.status(401).json({ message: "Invalid PIN" });
       }
@@ -372,9 +393,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/owner/logout', (req, res) => {
     if (req.session) {
-      req.session.isOwner = false;
+      // Properly destroy the session to prevent session fixation
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Session destroy error:', err);
+          return res.status(500).json({ message: "Logout error" });
+        }
+        
+        // Clear the session cookie
+        res.clearCookie('connect.sid'); // Default session cookie name
+        res.json({ message: "Logged out successfully" });
+      });
+    } else {
+      res.json({ message: "Logged out successfully" });
     }
-    res.json({ message: "Logged out successfully" });
   });
 
   // Settings management (owner only)
