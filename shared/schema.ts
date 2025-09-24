@@ -209,3 +209,63 @@ export const contactFormSchema = z.object({
 
 export type ContactForm = z.infer<typeof contactFormSchema>;
 
+// YAML Content validation schemas
+export const brandContentSchema = z.object({
+  name: z.string().min(1, "Brand name is required"),
+  tagline: z.string().min(1, "Tagline is required"),
+  pillars: z.array(z.string()).min(1, "At least one pillar is required"),
+  voice: z.object({
+    tone: z.string().min(1, "Voice tone is required"),
+    rules: z.array(z.string()).min(1, "At least one voice rule is required")
+  }),
+  organization: z.object({
+    legal_name: z.string().min(1, "Legal name is required"),
+    hq: z.string().min(1, "Headquarters location is required"),
+    email_public: z.string().min(1, "Public email is required"),
+    booking_link: z.string().min(1, "Booking link is required")
+  })
+});
+
+export const homeContentSchema = z.object({
+  hero: z.object({
+    headline: z.string().min(1, "Hero headline is required"),
+    sub: z.string().min(1, "Hero sub-text is required"),
+    primary_cta: z.string().min(1, "Primary CTA is required"),
+    secondary_cta: z.string().min(1, "Secondary CTA is required")
+  }),
+  threeP: z.object({
+    items: z.array(z.object({
+      title: z.string().min(1, "3P item title is required"),
+      text: z.string().min(1, "3P item text is required"),
+      metric: z.string().min(1, "3P item metric is required")
+    })).min(1, "At least one 3P item is required")
+  }),
+  process: z.array(z.string()).min(1, "At least one process step is required"),
+  logos: z.array(z.string()),
+  faq: z.array(z.object({
+    q: z.string().min(1, "FAQ question is required"),
+    a: z.string().min(1, "FAQ answer is required")
+  }))
+});
+
+export const servicesContentSchema = z.object({
+  items: z.array(z.object({
+    name: z.string().min(1, "Service name is required"),
+    promise: z.string().min(1, "Service promise is required"),
+    outcomes: z.array(z.string()).min(1, "At least one outcome is required"),
+    from_aud: z.number().min(0, "Price must be non-negative")
+  })).min(1, "At least one service is required")
+});
+
+export const marketingContentSchema = z.object({
+  brand: brandContentSchema,
+  home: homeContentSchema,
+  services: servicesContentSchema
+});
+
+// Types for YAML content
+export type BrandContent = z.infer<typeof brandContentSchema>;
+export type HomeContent = z.infer<typeof homeContentSchema>;
+export type ServicesContent = z.infer<typeof servicesContentSchema>;
+export type MarketingContent = z.infer<typeof marketingContentSchema>;
+
