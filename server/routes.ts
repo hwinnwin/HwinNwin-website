@@ -432,25 +432,67 @@ Sitemap: ${baseUrl}/sitemap.xml`);
     try {
       const yaml = await import('yaml');
       
-      // Load brand data
-      const brandPath = path.join(process.cwd(), 'content', 'brand.yaml');
-      const brandContent = await fs.readFile(brandPath, 'utf-8');
-      const brand = yaml.parse(brandContent);
+      // Load brand data with error handling
+      let brand = {};
+      try {
+        const brandPath = path.join(process.cwd(), 'content', 'brand.yaml');
+        const brandContent = await fs.readFile(brandPath, 'utf-8');
+        brand = yaml.parse(brandContent);
+      } catch (error) {
+        console.warn('Brand data not found, using defaults');
+        brand = { name: 'HwinNwin', tagline: 'Helping Businesses Scale' };
+      }
       
-      // Load services data
-      const servicesPath = path.join(process.cwd(), 'content', 'services.yaml');
-      const servicesContent = await fs.readFile(servicesPath, 'utf-8');
-      const services = yaml.parse(servicesContent);
+      // Load services data with error handling
+      let services = { items: [] };
+      try {
+        const servicesPath = path.join(process.cwd(), 'content', 'services.yaml');
+        const servicesContent = await fs.readFile(servicesPath, 'utf-8');
+        services = yaml.parse(servicesContent);
+      } catch (error) {
+        console.warn('Services data not found, using defaults');
+        services = { items: [] };
+      }
       
-      // Load home data
-      const homePath = path.join(process.cwd(), 'content', 'home.yaml');
-      const homeContent = await fs.readFile(homePath, 'utf-8');
-      const home = yaml.parse(homeContent);
+      // Load home data with error handling
+      let home = {
+        hero: {
+          headline: 'AI Automation & Creative Ecosystems',
+          sub: 'We deliver powerful solutions with balanced approach for lasting prosperity.',
+          primary_cta: 'Get Started',
+          secondary_cta: 'View Our Work'
+        },
+        threeP: { items: [] },
+        process: [],
+        faq: []
+      };
+      try {
+        const homePath = path.join(process.cwd(), 'content', 'home.yaml');
+        const homeContent = await fs.readFile(homePath, 'utf-8');
+        home = yaml.parse(homeContent);
+      } catch (error) {
+        console.warn('Home data not found, using defaults');
+      }
       
       res.json({ brand, services, home });
     } catch (error) {
       console.error('Error loading site data:', error);
-      res.status(500).json({ message: 'Failed to load site data' });
+      // Return minimal working data instead of error
+      res.json({
+        brand: { name: 'HwinNwin', tagline: 'Helping Businesses Scale' },
+        services: { items: [] },
+        home: {
+          hero: {
+            headline: 'AI Automation & Creative Ecosystems',
+            sub: 'We deliver powerful solutions with balanced approach for lasting prosperity.',
+            primary_cta: 'Get Started',
+            secondary_cta: 'View Our Work'
+          },
+          threeP: { items: [] },
+          process: [],
+          faq: []
+        }
+      });
     }
   });
 
