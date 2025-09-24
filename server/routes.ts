@@ -10,9 +10,11 @@ import { ImageService } from "./services/imageService";
 import { calculateQuote, validatePhotos } from "./services/quoteCalculator";
 import { quoteRateLimiter, generalRateLimiter, pinChangeRateLimiter } from "./middleware/rateLimiter";
 import { requireOwnerPin, createOwnerSession, requireOwnerSession } from "./middleware/ownerAuth";
-import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema } from "@shared/schema";
+import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema, contactFormSchema } from "@shared/schema";
 import { hashPin, comparePin, isPinHashed } from "./services/pinService";
 import { z } from "zod";
+import fs from "fs/promises";
+import matter from "gray-matter";
 
 // Helper function to safely parse JSON and handle 'undefined' strings
 function safeJsonParse<T>(jsonString: string | null | undefined, defaultValue: T): T {
@@ -33,6 +35,288 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Serve uploaded images
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  // Serve content directory for static files
+  app.use('/content', express.static(path.join(process.cwd(), 'content')));
+
+  // Content API endpoints for MDX processing
+  app.get('/api/content/case-studies', async (req, res) => {
+    try {
+      const caseStudySlugs = ['ops-time-cut', 'content-pipeline', 'sales-enablement'];
+      const caseStudies = [];
+
+      for (const slug of caseStudySlugs) {
+        try {
+          const filePath = path.join(process.cwd(), 'content', 'case-studies', `${slug}.mdx`);
+          const fileContent = await fs.readFile(filePath, 'utf-8');
+          const { data, content } = matter(fileContent);
+          
+          caseStudies.push({
+            slug,
+            frontmatter: data,
+            content
+          });
+        } catch (error) {
+          console.error(`Error loading case study ${slug}:`, error);
+          // Continue with other case studies
+        }
+      }
+
+      res.json(caseStudies);
+    } catch (error) {
+      console.error('Error loading case studies:', error);
+      res.status(500).json({ message: 'Failed to load case studies' });
+    }
+  });
+
+  app.get('/api/content/case-studies/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const filePath = path.join(process.cwd(), 'content', 'case-studies', `${slug}.mdx`);
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const { data, content } = matter(fileContent);
+      
+      res.json({
+        slug,
+        frontmatter: data,
+        content
+      });
+    } catch (error) {
+      console.error(`Error loading case study ${req.params.slug}:`, error);
+      res.status(404).json({ message: 'Case study not found' });
+    }
+  });
+
+  app.get('/api/content/blog', async (req, res) => {
+    try {
+      const blogSlugs = ['small-systems-win', 'three-p-check'];
+      const blogPosts = [];
+
+      for (const slug of blogSlugs) {
+        try {
+          const filePath = path.join(process.cwd(), 'content', 'blog', `${slug}.mdx`);
+          const fileContent = await fs.readFile(filePath, 'utf-8');
+          const { data, content } = matter(fileContent);
+          
+          blogPosts.push({
+            slug,
+            frontmatter: data,
+            content
+          });
+        } catch (error) {
+          console.error(`Error loading blog post ${slug}:`, error);
+          // Continue with other posts
+        }
+      }
+
+      // Sort by date (newest first)
+      blogPosts.sort((a, b) => 
+        new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime()
+      );
+
+      res.json(blogPosts);
+    } catch (error) {
+      console.error('Error loading blog posts:', error);
+      res.status(500).json({ message: 'Failed to load blog posts' });
+    }
+  });
+
+  app.get('/api/content/blog/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const filePath = path.join(process.cwd(), 'content', 'blog', `${slug}.mdx`);
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const { data, content } = matter(fileContent);
+      
+      res.json({
+        slug,
+        frontmatter: data,
+        content
+      });
+    } catch (error) {
+      console.error(`Error loading blog post ${req.params.slug}:`, error);
+      res.status(404).json({ message: 'Blog post not found' });
+    }
+  });
+
+  // Contact form endpoint for marketing site
+  app.post('/api/contact', async (req, res) => {
+    try {
+      // Validate request data and check honeypot fields
+      const validationResult = contactFormSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { name, email, company, phone, service, message, website, url, honeypot } = validationResult.data;
+
+      // Additional spam protection - honeypot fields should be empty
+      if (website || url || honeypot) {
+        return res.status(400).json({ message: "Invalid request" });
+      }
+
+      // Get settings for email service
+      const settings = await storage.getSettings();
+      const emailService = new EmailService(settings);
+
+      if (!emailService.isConfigured()) {
+        console.warn('Contact form submitted but email service not configured');
+        return res.status(500).json({ 
+          message: "Email service not configured. Please try again later or contact us directly." 
+        });
+      }
+
+      // Prepare contact information for email
+      const serviceLabels: Record<string, string> = {
+        consulting: "Business Consulting",
+        strategy: "Strategic Planning", 
+        implementation: "Implementation Support",
+        custom: "Custom Solution",
+        other: "Other"
+      };
+
+      const serviceLabel = service && service !== "" && serviceLabels[service] ? serviceLabels[service] : service || "Not specified";
+      
+      // Send notification email to business
+      const businessEmailResult = await emailService.sendEmail({
+        to: settings.fromEmail || 'contact@hwinwwin.com',
+        from: settings.fromEmail || 'contact@hwinwwin.com',
+        subject: `New Contact Form Submission - ${name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #D4AF37; color: white; padding: 20px; text-align: center;">
+              <h1>HwinNwin</h1>
+              <p>New Contact Form Submission</p>
+            </div>
+            
+            <div style="padding: 20px;">
+              <h2>Contact Details</h2>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 8px 0; font-weight: bold;">Name:</td>
+                  <td style="padding: 8px 0;">${name}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 8px 0; font-weight: bold;">Email:</td>
+                  <td style="padding: 8px 0;">${email}</td>
+                </tr>
+                ${company ? `<tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 8px 0; font-weight: bold;">Company:</td>
+                  <td style="padding: 8px 0;">${company}</td>
+                </tr>` : ''}
+                ${phone ? `<tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 8px 0; font-weight: bold;">Phone:</td>
+                  <td style="padding: 8px 0;">${phone}</td>
+                </tr>` : ''}
+                <tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 8px 0; font-weight: bold;">Service Interest:</td>
+                  <td style="padding: 8px 0;">${serviceLabel}</td>
+                </tr>
+              </table>
+              
+              <h3>Message</h3>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <p style="white-space: pre-wrap;">${message}</p>
+              </div>
+              
+              <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                <strong>Response recommended within:</strong> 24 hours<br>
+                <strong>Submission time:</strong> ${new Date().toLocaleString('en-AU', { timeZone: 'Australia/Melbourne' })}
+              </p>
+            </div>
+          </div>
+        `,
+        text: `
+New Contact Form Submission
+
+Name: ${name}
+Email: ${email}
+${company ? `Company: ${company}` : ''}
+${phone ? `Phone: ${phone}` : ''}
+Service Interest: ${serviceLabel}
+
+Message:
+${message}
+
+Submitted: ${new Date().toLocaleString('en-AU', { timeZone: 'Australia/Melbourne' })}
+        `
+      });
+
+      // Send confirmation email to customer
+      const customerEmailResult = await emailService.sendEmail({
+        to: email,
+        from: settings.fromEmail || 'contact@hwinwwin.com',
+        subject: "Thank you for contacting HwinNwin - We'll be in touch soon",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #D4AF37; color: white; padding: 20px; text-align: center;">
+              <h1>HwinNwin</h1>
+              <p>Helping Businesses Scale with Structure, Mindset, and Excellence</p>
+            </div>
+            
+            <div style="padding: 20px;">
+              <h2>Thank you for your interest!</h2>
+              
+              <p>Dear ${name},</p>
+              
+              <p>We've received your message and appreciate you taking the time to reach out to us. Our team will review your inquiry and respond within 24 hours.</p>
+              
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="margin: 0 0 10px 0; color: #D4AF37;">Your inquiry summary:</h3>
+                <p><strong>Service Interest:</strong> ${serviceLabel}</p>
+                <p><strong>Message:</strong> ${message.substring(0, 200)}${message.length > 200 ? '...' : ''}</p>
+              </div>
+              
+              <p>In the meantime, feel free to explore our <a href="${settings.siteUrl}/services" style="color: #D4AF37;">services</a> or read about our approach on our <a href="${settings.siteUrl}/blog" style="color: #D4AF37;">blog</a>.</p>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <p><strong>The HwinNwin Team</strong><br>
+                Melbourne, Australia</p>
+              </div>
+              
+              <p style="font-size: 12px; color: #666;">
+                This is an automated confirmation. Please don't reply to this email. 
+                If you need immediate assistance, please contact us directly.
+              </p>
+            </div>
+          </div>
+        `,
+        text: `
+Dear ${name},
+
+Thank you for contacting HwinNwin. We've received your message and will respond within 24 hours.
+
+Your inquiry summary:
+Service Interest: ${serviceLabel}
+Message: ${message.substring(0, 200)}${message.length > 200 ? '...' : ''}
+
+In the meantime, feel free to explore our website at ${settings.siteUrl}
+
+Best regards,
+The HwinNwin Team
+Melbourne, Australia
+        `
+      });
+
+      const emailSent = businessEmailResult.success && customerEmailResult.success;
+
+      res.status(200).json({
+        message: "Contact form submitted successfully. We'll be in touch within 24 hours.",
+        emailSent,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Contact form submission error:', error);
+      res.status(500).json({ 
+        message: "Failed to submit contact form. Please try again later." 
+      });
+    }
+  });
 
   // Apply rate limiting
   app.use('/api/quote', quoteRateLimiter.middleware());

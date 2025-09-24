@@ -1,5 +1,4 @@
 import yaml from 'yaml';
-import matter from 'gray-matter';
 
 // Brand content types
 export interface BrandData {
@@ -150,16 +149,15 @@ export async function loadLegalContent(type: 'privacy' | 'terms' | 'cookies'): P
 
 export async function loadCaseStudy(slug: string): Promise<MdxContent<CaseStudyFrontmatter>> {
   try {
-    const response = await fetch(`/content/case-studies/${slug}.mdx`);
+    const response = await fetch(`/api/content/case-studies/${slug}`);
     if (!response.ok) {
       throw new Error(`Failed to load case study ${slug}: ${response.status}`);
     }
-    const mdxContent = await response.text();
-    const { data, content } = matter(mdxContent);
+    const data = await response.json();
     
     return {
-      frontmatter: data as CaseStudyFrontmatter,
-      content
+      frontmatter: data.frontmatter as CaseStudyFrontmatter,
+      content: data.content
     };
   } catch (error) {
     console.error(`Error loading case study ${slug}:`, error);
@@ -169,16 +167,15 @@ export async function loadCaseStudy(slug: string): Promise<MdxContent<CaseStudyF
 
 export async function loadBlogPost(slug: string): Promise<MdxContent<BlogPostFrontmatter>> {
   try {
-    const response = await fetch(`/content/blog/${slug}.mdx`);
+    const response = await fetch(`/api/content/blog/${slug}`);
     if (!response.ok) {
       throw new Error(`Failed to load blog post ${slug}: ${response.status}`);
     }
-    const mdxContent = await response.text();
-    const { data, content } = matter(mdxContent);
+    const data = await response.json();
     
     return {
-      frontmatter: data as BlogPostFrontmatter,
-      content
+      frontmatter: data.frontmatter as BlogPostFrontmatter,
+      content: data.content
     };
   } catch (error) {
     console.error(`Error loading blog post ${slug}:`, error);
@@ -187,14 +184,19 @@ export async function loadBlogPost(slug: string): Promise<MdxContent<BlogPostFro
 }
 
 // Utility function to get all case studies
-export async function getAllCaseStudies(): Promise<MdxContent<CaseStudyFrontmatter>[]> {
-  const caseStudySlugs = ['ops-time-cut', 'content-pipeline', 'sales-enablement'];
-  
+export async function getAllCaseStudies(): Promise<(MdxContent<CaseStudyFrontmatter> & {slug: string})[]> {
   try {
-    const caseStudies = await Promise.all(
-      caseStudySlugs.map(slug => loadCaseStudy(slug))
-    );
-    return caseStudies;
+    const response = await fetch('/api/content/case-studies');
+    if (!response.ok) {
+      throw new Error(`Failed to load case studies: ${response.status}`);
+    }
+    const caseStudies = await response.json();
+    
+    return caseStudies.map((study: any) => ({
+      frontmatter: study.frontmatter as CaseStudyFrontmatter,
+      content: study.content,
+      slug: study.slug
+    }));
   } catch (error) {
     console.error('Error loading case studies:', error);
     throw new Error('Failed to load case studies');
@@ -203,16 +205,17 @@ export async function getAllCaseStudies(): Promise<MdxContent<CaseStudyFrontmatt
 
 // Utility function to get all blog posts
 export async function getAllBlogPosts(): Promise<MdxContent<BlogPostFrontmatter>[]> {
-  const blogSlugs = ['small-systems-win', 'three-p-check'];
-  
   try {
-    const blogPosts = await Promise.all(
-      blogSlugs.map(slug => loadBlogPost(slug))
-    );
-    // Sort by date (newest first)
-    return blogPosts.sort((a, b) => 
-      new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime()
-    );
+    const response = await fetch('/api/content/blog');
+    if (!response.ok) {
+      throw new Error(`Failed to load blog posts: ${response.status}`);
+    }
+    const blogPosts = await response.json();
+    
+    return blogPosts.map((post: any) => ({
+      frontmatter: post.frontmatter as BlogPostFrontmatter,
+      content: post.content
+    }));
   } catch (error) {
     console.error('Error loading blog posts:', error);
     throw new Error('Failed to load blog posts');

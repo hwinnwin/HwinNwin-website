@@ -45,7 +45,7 @@ export default function CaseStudiesPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {caseStudies?.map((caseStudy, index) => {
-              const slug = caseStudy.frontmatter.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+              const slug = caseStudy.slug;
               
               return (
                 <Card key={index} className="hover:shadow-soft transition-shadow group" data-testid={`case-study-card-${index}`}>

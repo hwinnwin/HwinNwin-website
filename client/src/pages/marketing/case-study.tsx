@@ -115,8 +115,46 @@ export default function CaseStudyPage() {
       <section className="py-8 lg:py-16" data-testid="case-study-content">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
-            <div className="prose prose-lg max-w-none" data-testid="case-study-text">
-              <ReactMarkdown>{content}</ReactMarkdown>
+            <div className="prose prose-lg prose-gray dark:prose-invert max-w-none
+                         prose-headings:text-charcoal dark:prose-headings:text-hwin-white
+                         prose-p:text-muted-foreground prose-strong:text-charcoal dark:prose-strong:text-hwin-white
+                         prose-blockquote:border-gold prose-blockquote:bg-gold/5 prose-blockquote:text-gold
+                         prose-a:text-gold hover:prose-a:text-gold/80
+                         prose-ul:text-muted-foreground prose-ol:text-muted-foreground" 
+                         data-testid="case-study-text">
+              <ReactMarkdown 
+                components={{
+                  blockquote: ({node, ...props}) => (
+                    <blockquote className="border-l-4 border-gold bg-gold/5 pl-4 py-2 my-6 italic text-gold font-medium" {...props} />
+                  ),
+                  strong: ({node, ...props}) => (
+                    <strong className="font-semibold text-charcoal dark:text-hwin-white" {...props} />
+                  ),
+                  h1: ({node, ...props}) => (
+                    <h1 className="text-3xl font-bold text-charcoal dark:text-hwin-white mt-8 mb-4" {...props} />
+                  ),
+                  h2: ({node, ...props}) => (
+                    <h2 className="text-2xl font-semibold text-charcoal dark:text-hwin-white mt-6 mb-3" {...props} />
+                  ),
+                  h3: ({node, ...props}) => (
+                    <h3 className="text-xl font-medium text-charcoal dark:text-hwin-white mt-4 mb-2" {...props} />
+                  ),
+                  p: ({node, ...props}) => (
+                    <p className="text-muted-foreground leading-relaxed mb-4" {...props} />
+                  ),
+                  ul: ({node, ...props}) => (
+                    <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4" {...props} />
+                  ),
+                  ol: ({node, ...props}) => (
+                    <ol className="list-decimal list-inside text-muted-foreground space-y-2 mb-4" {...props} />
+                  ),
+                  li: ({node, ...props}) => (
+                    <li className="text-muted-foreground" {...props} />
+                  )
+                }}
+              >
+                {content}
+              </ReactMarkdown>
             </div>
           </div>
         </div>
