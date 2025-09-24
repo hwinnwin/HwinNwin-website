@@ -13,6 +13,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOwnerAuth } from "@/hooks/use-owner-auth";
+import PinModal from "@/components/pin-modal";
 import { 
   ArrowLeft, 
   Save, 
@@ -62,6 +64,7 @@ interface Settings {
   primaryColor: string;
   fromEmail: string;
   siteUrl: string;
+  sendgridApiKey?: string;
 }
 
 export default function OwnerSettings() {
@@ -69,12 +72,14 @@ export default function OwnerSettings() {
   const [showPinChange, setShowPinChange] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAuthenticated, showPinModal, onPinSuccess, onPinModalClose, handle401Error, shouldMakeApiCalls } = useOwnerAuth();
 
   const { data: settings, isLoading } = useQuery<Settings>({
     queryKey: ['/api/settings'],
+    enabled: shouldMakeApiCalls,
     retry: (failureCount, error: any) => {
       if (error?.message?.includes('401')) {
-        navigate('/');
+        handle401Error();
         return false;
       }
       return failureCount < 3;
@@ -146,6 +151,30 @@ export default function OwnerSettings() {
   const onPinSubmit = (data: PinChangeFormData) => {
     changePinMutation.mutate(data);
   };
+
+  // Show loading state while waiting for authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <nav className="bg-card border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+          </div>
+        </nav>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <Skeleton className="h-96" />
+        </div>
+        <PinModal 
+          isOpen={showPinModal} 
+          onClose={onPinModalClose} 
+          onSuccess={onPinSuccess} 
+        />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -611,6 +640,13 @@ export default function OwnerSettings() {
           </Card>
         </div>
       </div>
+      
+      {/* PIN Modal */}
+      <PinModal 
+        isOpen={showPinModal} 
+        onClose={onPinModalClose} 
+        onSuccess={onPinSuccess} 
+      />
     </div>
   );
 }

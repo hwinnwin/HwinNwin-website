@@ -16,7 +16,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOwnerAuth } from "@/hooks/use-owner-auth";
 import QuoteReviewModal from "@/components/quote-review-modal";
+import PinModal from "@/components/pin-modal";
 import { 
   FileText, 
   CheckCircle, 
@@ -67,13 +69,15 @@ export default function OwnerDashboard() {
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAuthenticated, showPinModal, onPinSuccess, onPinModalClose, handle401Error, shouldMakeApiCalls } = useOwnerAuth();
 
-  // Check if user is authenticated
+  // Only make API calls when authenticated
   const { data: analytics, isLoading: analyticsLoading } = useQuery<Analytics>({
     queryKey: ['/api/analytics'],
+    enabled: shouldMakeApiCalls,
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.response?.status === 401) {
-        navigate('/');
+        handle401Error();
         return false;
       }
       return failureCount < 3;
@@ -82,9 +86,10 @@ export default function OwnerDashboard() {
 
   const { data: quotes, isLoading: quotesLoading } = useQuery<Quote[]>({
     queryKey: ['/api/quotes'],
+    enabled: shouldMakeApiCalls,
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.response?.status === 401) {
-        navigate('/');
+        handle401Error();
         return false;
       }
       return failureCount < 3;
@@ -106,6 +111,35 @@ export default function OwnerDashboard() {
   const handleLogout = () => {
     logoutMutation.mutate();
   };
+
+  // Show loading state while waiting for authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <nav className="bg-card border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+          </div>
+        </nav>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-24" />
+            ))}
+          </div>
+          <Skeleton className="h-96" />
+        </div>
+        <PinModal 
+          isOpen={showPinModal} 
+          onClose={onPinModalClose} 
+          onSuccess={onPinSuccess} 
+        />
+      </div>
+    );
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -399,6 +433,13 @@ export default function OwnerDashboard() {
           onClose={() => setSelectedQuoteId(null)}
         />
       )}
+      
+      {/* PIN Modal */}
+      <PinModal 
+        isOpen={showPinModal} 
+        onClose={onPinModalClose} 
+        onSuccess={onPinSuccess} 
+      />
     </div>
   );
 }
