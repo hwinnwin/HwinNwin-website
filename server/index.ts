@@ -22,9 +22,9 @@ if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET environment variable is required in production');
 }
 
-// Configure session store - use MemoryStore for dev, PostgreSQL only if DATABASE_URL exists
+// Configure session store - use MemoryStore for dev, PostgreSQL for production
 let sessionStore;
-if (process.env.DATABASE_URL) {
+if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
   const PgSession = connectPgSimple(session);
   sessionStore = new PgSession({
     conString: process.env.DATABASE_URL,
