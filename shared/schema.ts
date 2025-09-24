@@ -193,3 +193,19 @@ export type PinValidation = z.infer<typeof pinValidationSchema>;
 export type PinChange = z.infer<typeof pinChangeSchema>;
 export type FirstTimePinChange = z.infer<typeof firstTimePinChangeSchema>;
 
+// Contact form schema for marketing site
+export const contactFormSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+  email: z.string().email("Please enter a valid email address").max(100, "Email is too long"),
+  company: z.string().max(100, "Company name is too long").optional().or(z.literal("")),
+  phone: z.string().max(20, "Phone number is too long").optional().or(z.literal("")),
+  service: z.enum(["consulting", "strategy", "implementation", "custom", "other", ""]).optional(),
+  message: z.string().min(10, "Message must be at least 10 characters").max(2000, "Message is too long"),
+  // Honeypot fields for spam protection (should always be empty)
+  website: z.string().max(0, "Invalid request").optional().or(z.literal("")),
+  url: z.string().max(0, "Invalid request").optional().or(z.literal("")),
+  honeypot: z.string().max(0, "Invalid request").optional().or(z.literal(""))
+});
+
+export type ContactForm = z.infer<typeof contactFormSchema>;
+

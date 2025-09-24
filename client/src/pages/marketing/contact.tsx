@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,17 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { contactFormSchema, type ContactForm } from "@shared/schema";
 import { loadBrandData } from "@/lib/contentLoader";
-import { Mail, MapPin, ArrowRight } from "lucide-react";
-
-interface ContactForm {
-  name: string;
-  email: string;
-  company: string;
-  service: string;
-  message: string;
-}
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Mail, MapPin, ArrowRight, Calendar, ExternalLink, CheckCircle, Phone } from "lucide-react";
+import { useState } from "react";
 
 export default function ContactPage() {
   const { data: brandData, isLoading } = useQuery({
@@ -24,14 +22,59 @@ export default function ContactPage() {
     queryFn: loadBrandData,
   });
 
-  const { register, handleSubmit, setValue, watch } = useForm<ContactForm>();
-  const selectedService = watch("service");
+  const { toast } = useToast();
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const form = useForm<ContactForm>({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      company: "",
+      phone: "",
+      service: "",
+      message: "",
+      website: "", // Honeypot field
+      url: "", // Honeypot field
+      honeypot: "" // Honeypot field
+    },
+  });
+
+  const contactMutation = useMutation({
+    mutationFn: (data: ContactForm) => apiRequest('/api/contact', 'POST', data),
+    onSuccess: (response) => {
+      setIsSubmitted(true);
+      toast({
+        title: "Message sent successfully!",
+        description: "We'll be in touch within 24 hours.",
+        duration: 5000,
+      });
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to send message",
+        description: error.message || "Please try again later.",
+      });
+    },
+  });
 
   const onSubmit = (data: ContactForm) => {
-    // In a real implementation, this would send to a backend
-    console.log("Contact form submitted:", data);
-    // For now, we'll just show an alert
-    alert("Thank you for your interest! We'll be in touch soon.");
+    contactMutation.mutate(data);
+  };
+
+  const handleBookCall = () => {
+    const bookingLink = brandData?.organization?.booking_link;
+    if (bookingLink && bookingLink !== "REPLACE_ME_CAL_COM_LINK") {
+      window.open(bookingLink, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Booking unavailable",
+        description: "Please contact us directly to schedule a call.",
+      });
+    }
   };
 
   if (isLoading) {
@@ -57,6 +100,25 @@ export default function ContactPage() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto" data-testid="contact-subtitle">
               Ready to scale your business with structure, mindset, and excellence? Start the conversation.
             </p>
+
+            {/* Cal.com Integration Button */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+              <Button 
+                onClick={handleBookCall}
+                size="lg" 
+                className="bg-gold hover:bg-gold/90 text-charcoal font-semibold shadow-lg border-0 px-8 py-3"
+                data-testid="book-strategy-call"
+                aria-label="Book a strategy call with HwinNwin"
+              >
+                <Calendar className="mr-2 h-5 w-5" />
+                Book a Strategy Call
+                <ExternalLink className="ml-2 h-4 w-4" />
+              </Button>
+              
+              <span className="text-sm text-muted-foreground">
+                or send us a message below
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -74,75 +136,227 @@ export default function ContactPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" data-testid="contact-form">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      {...register("name", { required: true })}
-                      placeholder="Your full name"
-                      data-testid="input-name"
-                    />
+                {isSubmitted ? (
+                  <div className="text-center space-y-4 py-8" data-testid="success-message">
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+                    <h3 className="text-xl font-semibold text-charcoal dark:text-hwin-white">
+                      Message Sent Successfully!
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Thank you for reaching out. We'll get back to you within 24 hours.
+                    </p>
+                    <Button 
+                      onClick={() => setIsSubmitted(false)}
+                      variant="outline"
+                      data-testid="send-another-message"
+                    >
+                      Send Another Message
+                    </Button>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      {...register("email", { required: true })}
-                      placeholder="your.email@company.com"
-                      data-testid="input-email"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
-                    <Input
-                      id="company"
-                      {...register("company")}
-                      placeholder="Your company name"
-                      data-testid="input-company"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="service">Service of Interest</Label>
-                    <Select onValueChange={(value) => setValue("service", value)} data-testid="select-service">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a service" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="consulting">Business Consulting</SelectItem>
-                        <SelectItem value="strategy">Strategic Planning</SelectItem>
-                        <SelectItem value="implementation">Implementation Support</SelectItem>
-                        <SelectItem value="custom">Custom Solution</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message *</Label>
-                    <Textarea
-                      id="message"
-                      {...register("message", { required: true })}
-                      placeholder="Tell us about your business challenges and goals..."
-                      rows={5}
-                      data-testid="textarea-message"
-                    />
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    className="w-full bg-gold hover:bg-gold/90 text-charcoal font-medium shadow-soft border-0"
-                    data-testid="submit-contact-form"
-                  >
-                    Send Message
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </form>
+                ) : (
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid="contact-form">
+                      {/* Honeypot Fields - Hidden from users */}
+                      <div style={{ display: 'none' }} aria-hidden="true">
+                        <FormField
+                          control={form.control}
+                          name="website"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Website</FormLabel>
+                              <FormControl>
+                                <Input {...field} tabIndex={-1} autoComplete="off" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="url"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>URL</FormLabel>
+                              <FormControl>
+                                <Input {...field} tabIndex={-1} autoComplete="off" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="honeypot"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Honeypot</FormLabel>
+                              <FormControl>
+                                <Input {...field} tabIndex={-1} autoComplete="off" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Name Field */}
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="name">Full Name *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                id="name"
+                                placeholder="Your full name" 
+                                {...field}
+                                data-testid="input-name"
+                                disabled={contactMutation.isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Email Field */}
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="email">Email Address *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                id="email"
+                                type="email" 
+                                placeholder="your.email@company.com" 
+                                {...field}
+                                data-testid="input-email"
+                                disabled={contactMutation.isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Company Field */}
+                      <FormField
+                        control={form.control}
+                        name="company"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="company">Company</FormLabel>
+                            <FormControl>
+                              <Input 
+                                id="company"
+                                placeholder="Your company name" 
+                                {...field}
+                                data-testid="input-company"
+                                disabled={contactMutation.isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Phone Field */}
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="phone">Phone Number</FormLabel>
+                            <FormControl>
+                              <Input 
+                                id="phone"
+                                type="tel"
+                                placeholder="+61 4XX XXX XXX" 
+                                {...field}
+                                data-testid="input-phone"
+                                disabled={contactMutation.isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Service Field */}
+                      <FormField
+                        control={form.control}
+                        name="service"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="service">Service of Interest</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              value={field.value}
+                              disabled={contactMutation.isPending}
+                            >
+                              <FormControl>
+                                <SelectTrigger data-testid="select-service">
+                                  <SelectValue placeholder="Select a service" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="consulting">Business Consulting</SelectItem>
+                                <SelectItem value="strategy">Strategic Planning</SelectItem>
+                                <SelectItem value="implementation">Implementation Support</SelectItem>
+                                <SelectItem value="custom">Custom Solution</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Message Field */}
+                      <FormField
+                        control={form.control}
+                        name="message"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="message">Message *</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                id="message"
+                                placeholder="Tell us about your business challenges and goals..."
+                                rows={5}
+                                {...field}
+                                data-testid="textarea-message"
+                                disabled={contactMutation.isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Submit Button */}
+                      <Button 
+                        type="submit" 
+                        size="lg" 
+                        className="w-full bg-gold hover:bg-gold/90 text-charcoal font-medium shadow-soft border-0"
+                        disabled={contactMutation.isPending}
+                        data-testid="submit-contact-form"
+                      >
+                        {contactMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-charcoal mr-2"></div>
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            Send Message
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                )}
               </CardContent>
             </Card>
 
@@ -156,9 +370,12 @@ export default function ContactPage() {
                   <div className="flex items-start space-x-3">
                     <MapPin className="h-5 w-5 text-gold mt-1" />
                     <div>
-                      <h3 className="font-semibold text-charcoal dark:text-hwin-white">Location</h3>
+                      <h3 className="font-semibold text-charcoal dark:text-hwin-white">Melbourne Office</h3>
                       <p className="text-muted-foreground">
-                        {brandData?.organization.hq || "Melbourne, Australia"}
+                        {brandData?.organization?.hq || "Melbourne, Australia"}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Serving businesses across Australia and internationally
                       </p>
                     </div>
                   </div>
@@ -166,16 +383,39 @@ export default function ContactPage() {
                   <div className="flex items-start space-x-3">
                     <Mail className="h-5 w-5 text-gold mt-1" />
                     <div>
-                      <h3 className="font-semibold text-charcoal dark:text-hwin-white">Email</h3>
+                      <h3 className="font-semibold text-charcoal dark:text-hwin-white">Email Response</h3>
                       <p className="text-muted-foreground">
                         We'll respond within 24 hours
                       </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Most responses happen much sooner
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <Calendar className="h-5 w-5 text-gold mt-1" />
+                    <div>
+                      <h3 className="font-semibold text-charcoal dark:text-hwin-white">Strategy Calls</h3>
+                      <p className="text-muted-foreground">
+                        Book a complimentary consultation
+                      </p>
+                      <Button 
+                        onClick={handleBookCall}
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        data-testid="book-call-secondary"
+                      >
+                        Schedule Now
+                        <ExternalLink className="ml-1 h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Why Choose Us */}
+              {/* Why Choose Us - 3P Check */}
               <Card className="bg-muted/20 border-gold/20" data-testid="why-choose-us">
                 <CardHeader>
                   <CardTitle className="text-charcoal dark:text-hwin-white">
@@ -188,7 +428,7 @@ export default function ContactPage() {
                     <div>
                       <h4 className="font-semibold text-charcoal dark:text-hwin-white">Power</h4>
                       <p className="text-sm text-muted-foreground">
-                        Confident solutions with strong business impact
+                        Confident solutions with strong business impact that drive real results
                       </p>
                     </div>
                   </div>
@@ -197,7 +437,7 @@ export default function ContactPage() {
                     <div>
                       <h4 className="font-semibold text-charcoal dark:text-hwin-white">Balance</h4>
                       <p className="text-sm text-muted-foreground">
-                        Harmonious approach that works for your entire organization
+                        Harmonious approach that works for your entire organization and culture
                       </p>
                     </div>
                   </div>
@@ -206,22 +446,54 @@ export default function ContactPage() {
                     <div>
                       <h4 className="font-semibold text-charcoal dark:text-hwin-white">Prosperity</h4>
                       <p className="text-sm text-muted-foreground">
-                        Lasting value that grows with your business
+                        Lasting value that grows with your business and creates sustainable success
                       </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Service Overview */}
+              <Card className="bg-gradient-to-br from-gold/5 to-gold/10 border-gold/30" data-testid="service-overview">
+                <CardHeader>
+                  <CardTitle className="text-charcoal dark:text-hwin-white">
+                    Our Services
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="text-sm space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-gold" />
+                      <span className="text-muted-foreground">Strategic Business Planning</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-gold" />
+                      <span className="text-muted-foreground">Process Optimization</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-gold" />
+                      <span className="text-muted-foreground">Leadership Development</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-gold" />
+                      <span className="text-muted-foreground">Custom Solutions</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Response Time */}
-              <div className="bg-gold/10 rounded-2xl p-6 text-center" data-testid="response-time">
+              <div className="bg-gold/10 rounded-2xl p-6 text-center border border-gold/20" data-testid="response-time">
                 <h3 className="font-semibold text-charcoal dark:text-hwin-white mb-2">
-                  Quick Response
+                  Quick Response Guarantee
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   We respond to all inquiries within 24 hours. 
-                  Most responses happen much sooner.
+                  Most responses happen within a few hours during business days.
                 </p>
+                <div className="mt-3 text-xs text-muted-foreground">
+                  <strong>Business Hours:</strong> Mon-Fri 9AM-6PM AEST
+                </div>
               </div>
             </div>
           </div>
