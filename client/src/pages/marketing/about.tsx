@@ -140,25 +140,6 @@ export default function AboutPage() {
               </div>
             )}
 
-            {/* Voice & Tone */}
-            {brandData?.voice && (
-              <div className="bg-muted/20 rounded-2xl p-8 space-y-6" data-testid="voice-section">
-                <h2 className="text-2xl font-bold text-charcoal dark:text-hwin-white">
-                  Our Voice
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  {brandData.voice.tone}
-                </p>
-                <ul className="space-y-2">
-                  {brandData.voice.rules.map((rule, index) => (
-                    <li key={index} className="text-muted-foreground flex items-start space-x-2">
-                      <span className="text-gold">●</span>
-                      <span>{rule}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
 
             {/* Organization Info */}
             {brandData?.organization && (
