@@ -1,0 +1,25 @@
+items:
+  - name: AI Automation
+    promise: "Map workflows, build agents, remove manual grunt work."
+    outcomes: ["–40–70% manual time", "fewer errors", "faster cycle time"]
+    from_aud: 4500
+  - name: Creative Systems
+    promise: "Content pipelines and brand kits that keep output on-brief."
+    outcomes: ["consistent output", "faster approvals", "on-brand every time"]
+    from_aud: 3500
+  - name: Consulting & Roadmaps
+    promise: "Clarity and prioritised 90‑day execution plans."
+    outcomes: ["clear backlog", "measurable milestones", "risk reduced"]
+    from_aud: 2500
+  - name: Data & Dashboards
+    promise: "Decision dashboards and clean data flows you can trust."
+    outcomes: ["single source of truth", "weekly insight loops"]
+    from_aud: 3000
+  - name: Launch Sprints (90‑day)
+    promise: "Ship a focused system end‑to‑end with enablement."
+    outcomes: ["time‑boxed delivery", "team trained", "measurable lift"]
+    from_aud: 7500
+  - name: Training & Enablement
+    promise: "Playbooks and live sessions so your team can self‑serve."
+    outcomes: ["fewer bottlenecks", "faster onboarding"]
+    from_aud: 1500

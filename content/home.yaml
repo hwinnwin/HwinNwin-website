@@ -1,0 +1,25 @@
+hero:
+  headline: AI Automation & Creative Ecosystems that scale with structure, mindset, and excellence.
+  sub: We build small, smart systems that free time, reduce errors, and compound growth.
+  primary_cta: Book a Strategy Call
+  secondary_cta: See Our Systems
+threeP:
+  items:
+    - title: Power
+      text: Systems that move the needle without noise.
+      metric: "–62% manual steps"
+    - title: Balance
+      text: Guardrails and clarity so teams stay in flow.
+      metric: "+31% approval speed"
+    - title: Prosperity
+      text: Compounding outcomes; momentum you can measure.
+      metric: "99.9% uptime"
+process: ["Discover", "Design", "Build", "Train", "Scale"]
+logos: ["Client A","Client B","Client C"]
+faq:
+  - q: How fast is an MVP?
+    a: 2–3 weeks for a focused scope.
+  - q: Do you work fixed-fee?
+    a: Yes, with clear deliverables in AUD.
+  - q: Can you train our team?
+    a: Absolutely—playbooks and live sessions.
