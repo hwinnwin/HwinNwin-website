@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { getAllCaseStudies } from "@/lib/contentLoader";
 import { ArrowRight, ExternalLink } from "lucide-react";
+import { SeoHead } from "@/components/seo/SeoHead";
+import { SITE_CONFIG } from "@/lib/constants";
 
 export default function CaseStudiesPage() {
   const { data: caseStudies, isLoading } = useQuery({
@@ -25,6 +27,15 @@ export default function CaseStudiesPage() {
 
   return (
     <MarketingLayout>
+      {/* SEO */}
+      <SeoHead 
+        title="Case Studies - Real Results | HwinNwin"
+        description="Real results from real businesses. See how HwinNwin has helped companies scale with AI automation, creative systems, and strategic consulting in Melbourne, Australia."
+        ogTitle="Case Studies - Real Business Results | HwinNwin"
+        ogDescription="Discover client success stories: From operations optimization to content automation. Real case studies with measurable results."
+        canonicalUrl={`${SITE_CONFIG.baseUrl}/hwin/work`}
+        keywords={['case studies', 'business results', 'client success', 'AI automation', 'Melbourne consulting', 'implementation', 'ROI']}
+      />
       {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-background to-muted/20" data-testid="case-studies-hero">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

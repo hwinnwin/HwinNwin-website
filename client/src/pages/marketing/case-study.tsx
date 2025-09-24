@@ -7,6 +7,8 @@ import { Link } from "wouter";
 import { loadCaseStudy } from "@/lib/contentLoader";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { SeoHead } from "@/components/seo/SeoHead";
+import { SITE_CONFIG } from "@/lib/constants";
 
 export default function CaseStudyPage() {
   const [match, params] = useRoute("/hwin/work/:slug");
@@ -55,6 +57,15 @@ export default function CaseStudyPage() {
 
   return (
     <MarketingLayout>
+      {/* Dynamic SEO */}
+      <SeoHead 
+        title={`${frontmatter.title} - ${frontmatter.client} Case Study | HwinNwin`}
+        description={`Discover how HwinNwin helped ${frontmatter.client} achieve ${frontmatter.results[0] || 'significant business improvements'}. Case study with real results and implementation details.`}
+        ogTitle={`${frontmatter.title} - ${frontmatter.client} Success Story`}
+        ogDescription={`See how we helped ${frontmatter.client}: ${frontmatter.results.slice(0, 2).join(', ')}`}
+        canonicalUrl={`${SITE_CONFIG.baseUrl}/hwin/work/${slug}`}
+        keywords={[...(frontmatter.stack || []), frontmatter.client, 'case study', 'business results', 'implementation']}
+      />
       {/* Back Navigation */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button asChild variant="ghost" data-testid="back-navigation">

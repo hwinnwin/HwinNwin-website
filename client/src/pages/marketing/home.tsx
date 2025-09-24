@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { loadSiteData } from "@/lib/contentLoader";
 import { ArrowRight, CheckCircle } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { SeoHead } from "@/components/seo/SeoHead";
+import { SITE_CONFIG } from "@/lib/constants";
 
 export default function HomePage() {
   const { data: siteData, isLoading } = useQuery({
@@ -26,8 +29,66 @@ export default function HomePage() {
   const homeData = siteData?.home;
   const brandData = siteData?.brand;
 
+  // Structured Data for SEO
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "HwinNwin",
+    "legalName": "HwinNwin Pty Ltd",
+    "url": SITE_CONFIG.baseUrl,
+    "logo": `${SITE_CONFIG.baseUrl}/logo.png`,
+    "description": "Helping Businesses Scale with Structure, Mindset, and Excellence. We deliver powerful AI automation and creative systems solutions.",
+    "slogan": "Helping Businesses Scale with Structure, Mindset, and Excellence",
+    "foundingLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Melbourne",
+        "addressRegion": "Victoria",
+        "addressCountry": "AU"
+      }
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Melbourne",
+      "addressRegion": "Victoria", 
+      "addressCountry": "AU"
+    },
+    "areaServed": "AU",
+    "knowsAbout": ["Business Consulting", "AI Automation", "Creative Systems", "Strategic Planning", "Implementation Support"],
+    "sameAs": []
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "HwinNwin",
+    "url": SITE_CONFIG.baseUrl,
+    "description": "Professional business solutions including AI automation, creative systems, consulting, and training to help your business scale with structure, mindset, and excellence.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "HwinNwin"
+    },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": `${SITE_CONFIG.baseUrl}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <MarketingLayout>
+      {/* SEO */}
+      <SeoHead 
+        title="HwinNwin - AI Automation & Creative Ecosystems"
+        description="Scale your business with AI automation and creative ecosystems. We deliver powerful solutions with balanced approach for lasting prosperity in Melbourne, Australia."
+        ogTitle="HwinNwin - AI Automation & Creative Ecosystems"
+        ogDescription="Professional business solutions including AI automation, creative systems, consulting, and strategic planning to help Australian businesses thrive."
+        canonicalUrl={`${SITE_CONFIG.baseUrl}/hwin`}
+        keywords={["AI automation", "creative ecosystems", "business scaling", "Melbourne business consulting", "strategic planning", "implementation support"]}
+      />
+      <JsonLd json={organizationSchema} />
+      <JsonLd json={websiteSchema} />
       {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-background to-muted/20" data-testid="hero-section">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

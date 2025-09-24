@@ -76,12 +76,16 @@ export default function MarketingNav() {
               variant="ghost"
               size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-menu"
+              aria-haspopup="menu"
               data-testid="mobile-menu-button"
             >
               {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
+                <X className="h-6 w-6" aria-hidden="true" />
               ) : (
-                <Menu className="h-6 w-6" />
+                <Menu className="h-6 w-6" aria-hidden="true" />
               )}
             </Button>
           </div>
@@ -89,7 +93,12 @@ export default function MarketingNav() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border/40 bg-background" data-testid="mobile-menu">
+          <div 
+            id="mobile-navigation-menu"
+            className="md:hidden border-t border-border/40 bg-background" 
+            role="menu"
+            data-testid="mobile-menu"
+          >
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navItems.map((item) => (
                 <Link

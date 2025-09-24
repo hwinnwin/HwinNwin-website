@@ -7,6 +7,8 @@ import { Link } from "wouter";
 import { loadBlogPost } from "@/lib/contentLoader";
 import { ArrowLeft, ArrowRight, Calendar, User } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { SeoHead } from "@/components/seo/SeoHead";
+import { SITE_CONFIG } from "@/lib/constants";
 
 export default function BlogPostPage() {
   const [match, params] = useRoute("/hwin/insights/:slug");
@@ -63,6 +65,15 @@ export default function BlogPostPage() {
 
   return (
     <MarketingLayout>
+      {/* Dynamic SEO */}
+      <SeoHead 
+        title={`${frontmatter.title} | HwinNwin Insights`}
+        description={frontmatter.description || `${frontmatter.title} - Business insights and strategies from HwinNwin. Published on ${formatDate(frontmatter.date)}`}
+        ogTitle={frontmatter.title}
+        ogDescription={frontmatter.description || `Business insights: ${frontmatter.title}`}
+        canonicalUrl={`${SITE_CONFIG.baseUrl}/hwin/insights/${slug}`}
+        keywords={[...(frontmatter.tags || []), 'business insights', 'strategy', 'HwinNwin', 'consulting']}
+      />
       {/* Back Navigation */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button asChild variant="ghost" data-testid="back-navigation">

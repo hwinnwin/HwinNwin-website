@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { loadServicesData } from "@/lib/contentLoader";
 import { ArrowRight, CheckCircle } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { SeoHead } from "@/components/seo/SeoHead";
+import { SITE_CONFIG } from "@/lib/constants";
 
 export default function ServicesPage() {
   const { data: servicesData, isLoading } = useQuery({
@@ -23,8 +26,69 @@ export default function ServicesPage() {
     );
   }
 
+  // Structured Data for SEO
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "HwinNwin",
+    "legalName": "HwinNwin Pty Ltd",
+    "url": SITE_CONFIG.baseUrl,
+    "description": "Comprehensive business solutions designed to scale your business with structure, mindset, and excellence.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Melbourne",
+      "addressRegion": "Victoria", 
+      "addressCountry": "AU"
+    },
+    "areaServed": "AU"
+  };
+
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "serviceType": "Business Consulting",
+    "provider": {
+      "@type": "Organization",
+      "name": "HwinNwin"
+    },
+    "areaServed": "AU",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Business Solutions",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "AI Automation",
+            "description": "Streamline operations with intelligent automation solutions"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Creative Systems",
+            "description": "Build sustainable creative ecosystems for your business"
+          }
+        }
+      ]
+    }
+  };
+
   return (
     <MarketingLayout>
+      {/* SEO */}
+      <SeoHead 
+        title="Our Services - HwinNwin"
+        description="Comprehensive AI automation and creative systems solutions designed to scale your business with structure, mindset, and excellence. Professional consulting services in Melbourne, Australia."
+        ogTitle="Our Services - HwinNwin"
+        ogDescription="From AI automation to creative systems implementation, we offer comprehensive business solutions starting from AUD 5,000. Melbourne-based consulting."
+        canonicalUrl={`${SITE_CONFIG.baseUrl}/hwin/services`}
+        keywords={["AI automation services", "creative systems", "business consulting Melbourne", "strategic planning", "implementation support", "custom solutions"]}
+      />
+      <JsonLd json={organizationSchema} />
+      <JsonLd json={serviceSchema} />
       {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-background to-muted/20" data-testid="services-hero">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

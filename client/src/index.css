@@ -120,6 +120,22 @@
     scroll-behavior: smooth;
   }
 
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* Custom scrollbar for webkit browsers */
   ::-webkit-scrollbar {
     width: 8px;
@@ -166,6 +182,13 @@
     }
   }
 
+  /* Reduce spinner animation for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .fa-spin {
+      animation: none;
+    }
+  }
+
   /* Photo upload area styles */
   .photo-upload-area {
     transition: all 0.2s ease-in-out;
@@ -201,6 +224,13 @@
     }
     50% {
       opacity: .8;
+    }
+  }
+
+  /* Disable pulse animation for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .status-badge {
+      animation: none;
     }
   }
 }
