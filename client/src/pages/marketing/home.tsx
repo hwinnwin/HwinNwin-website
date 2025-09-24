@@ -26,8 +26,19 @@ export default function HomePage() {
     );
   }
 
-  const homeData = siteData?.home;
-  const brandData = siteData?.brand;
+  // Add safety checks for content data
+  if (!siteData || !siteData.home || !siteData.brand) {
+    return (
+      <MarketingLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-muted-foreground">Content not available</div>
+        </div>
+      </MarketingLayout>
+    );
+  }
+
+  const homeData = siteData.home;
+  const brandData = siteData.brand;
 
   // Structured Data for SEO
   const organizationSchema = {
@@ -142,7 +153,7 @@ export default function HomePage() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {homeData?.threeP.items.map((item, index) => (
+            {(homeData?.threeP?.items ?? []).map((item, index) => (
               <Card key={index} className="text-center p-8 hover:shadow-soft transition-shadow" data-testid={`three-p-item-${index}`}>
                 <CardContent className="space-y-4">
                   <div className="w-16 h-16 mx-auto bg-gold/10 rounded-2xl flex items-center justify-center">
@@ -159,7 +170,7 @@ export default function HomePage() {
                   </Badge>
                 </CardContent>
               </Card>
-            )) || []}
+            ))}
           </div>
         </div>
       </section>
@@ -178,7 +189,7 @@ export default function HomePage() {
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {homeData?.process.map((step, index) => (
+              {(homeData?.process ?? []).map((step, index) => (
                 <div key={index} className="flex items-start space-x-3" data-testid={`process-step-${index}`}>
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-gold rounded-full flex items-center justify-center">
@@ -190,7 +201,7 @@ export default function HomePage() {
                     <p className="text-sm text-charcoal dark:text-hwin-white">{step}</p>
                   </div>
                 </div>
-              )) || []}
+              ))}
             </div>
           </div>
         </div>

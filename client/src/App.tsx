@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,8 +23,13 @@ import LegalPage from "@/pages/marketing/legal";
 function Router() {
   return (
     <Switch>
-      {/* Existing Automotive App Routes */}
-      <Route path="/" component={CustomerForm} />
+      {/* Redirect root to HwinNwin marketing site */}
+      <Route path="/">
+        <Redirect to="/hwin" />
+      </Route>
+      
+      {/* Existing Automotive App Routes - moved to dedicated paths */}
+      <Route path="/panel-quote" component={CustomerForm} />
       <Route path="/owner" component={OwnerDashboard} />
       <Route path="/owner/settings" component={OwnerSettings} />
       <Route path="/q/:slug" component={PublicQuote} />

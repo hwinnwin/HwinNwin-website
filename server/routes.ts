@@ -427,6 +427,33 @@ Sitemap: ${baseUrl}/sitemap.xml`);
     }
   });
 
+  // Site data endpoint for marketing pages
+  app.get('/api/content/site-data', async (req, res) => {
+    try {
+      const yaml = await import('yaml');
+      
+      // Load brand data
+      const brandPath = path.join(process.cwd(), 'content', 'brand.yaml');
+      const brandContent = await fs.readFile(brandPath, 'utf-8');
+      const brand = yaml.parse(brandContent);
+      
+      // Load services data
+      const servicesPath = path.join(process.cwd(), 'content', 'services.yaml');
+      const servicesContent = await fs.readFile(servicesPath, 'utf-8');
+      const services = yaml.parse(servicesContent);
+      
+      // Load home data
+      const homePath = path.join(process.cwd(), 'content', 'home.yaml');
+      const homeContent = await fs.readFile(homePath, 'utf-8');
+      const home = yaml.parse(homeContent);
+      
+      res.json({ brand, services, home });
+    } catch (error) {
+      console.error('Error loading site data:', error);
+      res.status(500).json({ message: 'Failed to load site data' });
+    }
+  });
+
   // Contact form endpoint for marketing site
   app.post('/api/contact', async (req, res) => {
     try {
