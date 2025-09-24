@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import CustomerForm from "@/pages/customer-form";
 import OwnerDashboard from "@/pages/owner-dashboard";
 import OwnerSettings from "@/pages/owner-settings";
+import ContentEditor from "@/pages/content-editor";
 import PublicQuote from "@/pages/public-quote";
 
 // Marketing Pages
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/panel-quote" component={CustomerForm} />
       <Route path="/owner" component={OwnerDashboard} />
       <Route path="/owner/settings" component={OwnerSettings} />
+      <Route path="/owner/content" component={ContentEditor} />
       <Route path="/q/:slug" component={PublicQuote} />
       
       {/* Marketing Website Routes */}

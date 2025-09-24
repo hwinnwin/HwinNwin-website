@@ -167,6 +167,14 @@ export default function OwnerDashboard() {
             <div className="flex items-center space-x-4">
               <Button 
                 variant="secondary" 
+                onClick={() => navigate('/owner/content')}
+                data-testid="button-content-editor"
+              >
+                <Edit className="mr-2" size={16} />
+                Content Editor
+              </Button>
+              <Button 
+                variant="secondary" 
                 onClick={() => navigate('/owner/settings')}
                 data-testid="button-settings"
               >
