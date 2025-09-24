@@ -15,6 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOwnerAuth } from "@/hooks/use-owner-auth";
+import PinModal from "@/components/pin-modal";
 import { 
   ArrowLeft, 
   Save, 
@@ -73,13 +75,15 @@ export default function ContentEditor() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['brand']));
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAuthenticated, showPinModal, onPinSuccess, onPinModalClose, handle401Error, shouldMakeApiCalls } = useOwnerAuth();
 
-  // Fetch marketing content
+  // Fetch marketing content only when authenticated
   const { data: content, isLoading, error, refetch } = useQuery<MarketingContent>({
     queryKey: ['/api/content/marketing'],
+    enabled: shouldMakeApiCalls,
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.response?.status === 401) {
-        navigate('/');
+        handle401Error();
         return false;
       }
       return failureCount < 3;
@@ -130,6 +134,30 @@ export default function ContentEditor() {
     }
     setExpandedSections(newExpanded);
   };
+
+  // Show loading state while waiting for authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <nav className="bg-card border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+          </div>
+        </nav>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <Skeleton className="h-96" />
+        </div>
+        <PinModal 
+          isOpen={showPinModal} 
+          onClose={onPinModalClose} 
+          onSuccess={onPinSuccess} 
+        />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -377,6 +405,13 @@ export default function ContentEditor() {
           </form>
         </Form>
       </div>
+      
+      {/* PIN Modal */}
+      <PinModal 
+        isOpen={showPinModal} 
+        onClose={onPinModalClose} 
+        onSuccess={onPinSuccess} 
+      />
     </div>
   );
 }

@@ -1083,6 +1083,14 @@ Melbourne, Australia
     }
   });
 
+  // Session check (owner only)
+  app.get('/api/owner/session', requireOwnerSession, (req, res) => {
+    res.json({ 
+      authenticated: true,
+      message: "Valid owner session"
+    });
+  });
+
   // Settings management (owner only)
   app.get('/api/settings', requireOwnerSession, async (req, res) => {
     try {
