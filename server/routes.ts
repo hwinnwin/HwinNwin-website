@@ -10,7 +10,7 @@ import { ImageService } from "./services/imageService";
 import { calculateQuote, validatePhotos } from "./services/quoteCalculator";
 import { quoteRateLimiter, generalRateLimiter, pinChangeRateLimiter } from "./middleware/rateLimiter";
 import { requireOwnerPin, createOwnerSession, requireOwnerSession } from "./middleware/ownerAuth";
-import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema, contactFormSchema } from "@shared/schema";
+import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema, contactFormSchema, marketingContentSchema } from "@shared/schema";
 import { hashPin, comparePin, isPinHashed } from "./services/pinService";
 import { z } from "zod";
 import fs from "fs/promises";
@@ -68,7 +68,7 @@ async function servePageWithMeta(res: any, pageData: any) {
     
     // Replace or inject meta tags in the head section
     // Find the existing title and replace the head content up to </title>
-    const headRegex = /(<title>.*?<\/title>)/s;
+    const headRegex = /(<title>[\s\S]*?<\/title>)/;
     if (headRegex.test(html)) {
       html = html.replace(headRegex, metaTags.trim());
     } else {
@@ -122,7 +122,7 @@ Sitemap: ${baseUrl}/sitemap.xml`);
       const baseUrl = process.env.BASE_URL || 'https://hwinnwin.com';
       
       // Static marketing pages
-      const staticPages = [
+      const staticPages: { url: string; priority: string; lastmod?: string }[] = [
         { url: '/', priority: '1.0' },
         { url: '/hwin', priority: '1.0' },
         { url: '/hwin/services', priority: '0.9' },
@@ -1114,6 +1114,113 @@ Melbourne, Australia
     } catch (error) {
       console.error('Update settings error:', error);
       res.status(500).json({ message: "Failed to update settings" });
+    }
+  });
+
+  // Marketing content management endpoints (owner only)
+  // GET /api/content/marketing - Returns all YAML content for editing
+  app.get('/api/content/marketing', requireOwnerSession, async (req, res) => {
+    try {
+      const yaml = await import('yaml');
+      const contentPath = path.join(process.cwd(), 'content');
+      
+      // Load brand content
+      let brand = {};
+      try {
+        const brandContent = await fs.readFile(path.join(contentPath, 'brand.yaml'), 'utf-8');
+        brand = yaml.parse(brandContent);
+      } catch (error) {
+        console.error('Error reading brand.yaml:', error);
+        return res.status(500).json({ message: "Failed to read brand content file" });
+      }
+      
+      // Load home content
+      let home = {};
+      try {
+        const homeContent = await fs.readFile(path.join(contentPath, 'home.yaml'), 'utf-8');
+        home = yaml.parse(homeContent);
+      } catch (error) {
+        console.error('Error reading home.yaml:', error);
+        return res.status(500).json({ message: "Failed to read home content file" });
+      }
+      
+      // Load services content
+      let services = {};
+      try {
+        const servicesContent = await fs.readFile(path.join(contentPath, 'services.yaml'), 'utf-8');
+        services = yaml.parse(servicesContent);
+      } catch (error) {
+        console.error('Error reading services.yaml:', error);
+        return res.status(500).json({ message: "Failed to read services content file" });
+      }
+      
+      res.json({ brand, home, services });
+    } catch (error) {
+      console.error('Get marketing content error:', error);
+      res.status(500).json({ message: "Failed to get marketing content" });
+    }
+  });
+
+  // PUT /api/content/marketing - Updates YAML content files with validation
+  app.put('/api/content/marketing', requireOwnerSession, async (req, res) => {
+    try {
+      // Validate request body
+      const validationResult = marketingContentSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { brand, home, services } = validationResult.data;
+      const yaml = await import('yaml');
+      const contentPath = path.join(process.cwd(), 'content');
+
+      // Update brand.yaml
+      try {
+        const brandYaml = yaml.stringify(brand, { 
+          indent: 2,
+          lineWidth: 0 // Prevent line wrapping
+        });
+        await fs.writeFile(path.join(contentPath, 'brand.yaml'), brandYaml, 'utf-8');
+      } catch (error) {
+        console.error('Error writing brand.yaml:', error);
+        return res.status(500).json({ message: "Failed to update brand content file" });
+      }
+
+      // Update home.yaml
+      try {
+        const homeYaml = yaml.stringify(home, { 
+          indent: 2,
+          lineWidth: 0
+        });
+        await fs.writeFile(path.join(contentPath, 'home.yaml'), homeYaml, 'utf-8');
+      } catch (error) {
+        console.error('Error writing home.yaml:', error);
+        return res.status(500).json({ message: "Failed to update home content file" });
+      }
+
+      // Update services.yaml
+      try {
+        const servicesYaml = yaml.stringify(services, { 
+          indent: 2,
+          lineWidth: 0
+        });
+        await fs.writeFile(path.join(contentPath, 'services.yaml'), servicesYaml, 'utf-8');
+      } catch (error) {
+        console.error('Error writing services.yaml:', error);
+        return res.status(500).json({ message: "Failed to update services content file" });
+      }
+
+      res.json({ 
+        message: "Marketing content updated successfully",
+        updatedFiles: ['brand.yaml', 'home.yaml', 'services.yaml']
+      });
+    } catch (error) {
+      console.error('Update marketing content error:', error);
+      res.status(500).json({ message: "Failed to update marketing content" });
     }
   });
 
