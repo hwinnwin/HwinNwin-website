@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import MemoryStore from "memorystore";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { migratePlaintextPinToHashed } from "./services/migrationService";
@@ -86,6 +87,19 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Serve content directory as static files with proper MIME types
+app.use('/content', express.static(path.join(process.cwd(), 'content'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.yaml') || filePath.endsWith('.yml')) {
+      res.setHeader('Content-Type', 'text/yaml');
+    } else if (filePath.endsWith('.md')) {
+      res.setHeader('Content-Type', 'text/markdown');
+    } else if (filePath.endsWith('.mdx')) {
+      res.setHeader('Content-Type', 'text/markdown');
+    }
+  }
+}));
 
 (async () => {
   // Run PIN security migration before starting routes

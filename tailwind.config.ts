@@ -9,6 +9,7 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        "2xl": "1.25rem",
       },
       colors: {
         background: "var(--background)",
@@ -61,11 +62,24 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
+        
+        /* HwinNwin Brand Colors */
+        charcoal: {
+          DEFAULT: "var(--hwin-charcoal)",
+          2: "var(--hwin-charcoal-2)",
+        },
+        gold: {
+          DEFAULT: "var(--hwin-gold)",
+        },
+        "hwin-white": "var(--hwin-white)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
       },
       keyframes: {
         "accordion-down": {
