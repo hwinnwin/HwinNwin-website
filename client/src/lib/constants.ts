@@ -94,3 +94,10 @@ export const CONTACT_INFO = {
   businessName: "Lee Murdok Panels",
   tagline: "Professional Auto Damage Assessment"
 };
+
+// Site configuration
+export const SITE_CONFIG = {
+  baseUrl: import.meta.env.VITE_BASE_URL || 'https://hwinnwin.com',
+  name: 'HwinNwin',
+  tagline: 'Helping Businesses Scale with Structure, Mindset, and Excellence'
+};

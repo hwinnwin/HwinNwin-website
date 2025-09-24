@@ -16,6 +16,74 @@ import { z } from "zod";
 import fs from "fs/promises";
 import matter from "gray-matter";
 
+// Helper function to generate meta tags for SEO
+function generateSeoMeta(pageData: {
+  title: string;
+  description: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  canonicalUrl: string;
+  keywords?: string[];
+}) {
+  const baseUrl = process.env.BASE_URL || 'https://hwinnwin.com';
+  const ogImage = pageData.ogImage || `${baseUrl}/og-image.png`;
+  
+  return `
+    <title>${pageData.title}</title>
+    <meta name="description" content="${pageData.description}" />
+    <meta name="keywords" content="${pageData.keywords?.join(', ') || ''}" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="${pageData.ogTitle || pageData.title}" />
+    <meta property="og:description" content="${pageData.ogDescription || pageData.description}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${pageData.canonicalUrl}" />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:site_name" content="HwinNwin" />
+    
+    <!-- Twitter Card tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${pageData.ogTitle || pageData.title}" />
+    <meta name="twitter:description" content="${pageData.ogDescription || pageData.description}" />
+    <meta name="twitter:image" content="${ogImage}" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="${pageData.canonicalUrl}" />
+  `;
+}
+
+// Helper function to inject meta tags into HTML template
+async function servePageWithMeta(res: any, pageData: any) {
+  try {
+    const baseUrl = process.env.BASE_URL || 'https://hwinnwin.com';
+    const indexPath = path.join(process.cwd(), 'client', 'index.html');
+    let html = await fs.readFile(indexPath, 'utf-8');
+    
+    // Generate meta tags
+    const metaTags = generateSeoMeta({
+      ...pageData,
+      canonicalUrl: `${baseUrl}${pageData.path}`
+    });
+    
+    // Replace or inject meta tags in the head section
+    // Find the existing title and replace the head content up to </title>
+    const headRegex = /(<title>.*?<\/title>)/s;
+    if (headRegex.test(html)) {
+      html = html.replace(headRegex, metaTags.trim());
+    } else {
+      // Fallback: inject before closing head tag
+      html = html.replace('</head>', `${metaTags}\n  </head>`);
+    }
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Error serving page with meta:', error);
+    res.status(500).send('Internal Server Error');
+  }
+}
+
 // Helper function to safely parse JSON and handle 'undefined' strings
 function safeJsonParse<T>(jsonString: string | null | undefined, defaultValue: T): T {
   if (!jsonString || jsonString === 'undefined' || jsonString === 'null') {
@@ -38,6 +106,226 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Serve content directory for static files
   app.use('/content', express.static(path.join(process.cwd(), 'content')));
+
+  // SEO Routes - robots.txt and sitemap.xml (with dynamic BASE_URL)
+  app.get('/robots.txt', (req, res) => {
+    const baseUrl = process.env.BASE_URL || 'https://hwinnwin.com';
+    res.type('text/plain');
+    res.send(`User-agent: *
+Allow: /
+
+Sitemap: ${baseUrl}/sitemap.xml`);
+  });
+
+  app.get('/sitemap.xml', async (req, res) => {
+    try {
+      const baseUrl = process.env.BASE_URL || 'https://hwinnwin.com';
+      
+      // Static marketing pages
+      const staticPages = [
+        { url: '/', priority: '1.0' },
+        { url: '/hwin', priority: '1.0' },
+        { url: '/hwin/services', priority: '0.9' },
+        { url: '/hwin/about', priority: '0.8' },
+        { url: '/hwin/work', priority: '0.8' },
+        { url: '/hwin/insights', priority: '0.7' },
+        { url: '/hwin/contact', priority: '0.7' },
+      ];
+
+      // Read case studies dynamically
+      const caseStudies: { url: string; priority: string; lastmod?: string }[] = [];
+      try {
+        const caseStudiesDir = path.join(process.cwd(), 'content', 'case-studies');
+        const caseStudyFiles = await fs.readdir(caseStudiesDir);
+        
+        for (const file of caseStudyFiles) {
+          if (file.endsWith('.mdx')) {
+            const slug = file.replace('.mdx', '');
+            const filePath = path.join(caseStudiesDir, file);
+            const stats = await fs.stat(filePath);
+            
+            caseStudies.push({
+              url: `/hwin/work/${slug}`,
+              priority: '0.7',
+              lastmod: stats.mtime.toISOString().split('T')[0]
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error reading case studies for sitemap:', error);
+      }
+
+      // Read blog posts dynamically
+      const blogPosts: { url: string; priority: string; lastmod?: string }[] = [];
+      try {
+        const blogDir = path.join(process.cwd(), 'content', 'blog');
+        const blogFiles = await fs.readdir(blogDir);
+        
+        for (const file of blogFiles) {
+          if (file.endsWith('.mdx')) {
+            const slug = file.replace('.mdx', '');
+            const filePath = path.join(blogDir, file);
+            const stats = await fs.stat(filePath);
+            
+            blogPosts.push({
+              url: `/hwin/insights/${slug}`,
+              priority: '0.6',
+              lastmod: stats.mtime.toISOString().split('T')[0]
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error reading blog posts for sitemap:', error);
+      }
+
+      // Generate XML
+      const allUrls = [...staticPages, ...caseStudies, ...blogPosts];
+      
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+
+      for (const page of allUrls) {
+        xml += `
+  <url>
+    <loc>${baseUrl}${page.url}</loc>
+    <priority>${page.priority}</priority>`;
+        
+        if (page.lastmod) {
+          xml += `
+    <lastmod>${page.lastmod}</lastmod>`;
+        }
+        
+        xml += `
+  </url>`;
+      }
+
+      xml += `
+</urlset>`;
+
+      res.type('application/xml');
+      res.send(xml);
+    } catch (error) {
+      console.error('Error generating sitemap:', error);
+      res.status(500).send('Error generating sitemap');
+    }
+  });
+
+  // Marketing Routes with Server-Side Meta Tag Injection
+  // Home page
+  app.get('/hwin', async (req, res) => {
+    await servePageWithMeta(res, {
+      path: '/hwin',
+      title: 'HwinNwin - AI Automation & Creative Ecosystems',
+      description: 'Scale your business with AI automation and creative ecosystems. We deliver powerful solutions with balanced approach for lasting prosperity in Melbourne, Australia.',
+      ogTitle: 'HwinNwin - AI Automation & Creative Ecosystems',
+      ogDescription: 'Professional business solutions including AI automation, creative systems, consulting, and strategic planning to help Australian businesses thrive.',
+      keywords: ['AI automation', 'creative ecosystems', 'business scaling', 'Melbourne business consulting', 'strategic planning', 'implementation support']
+    });
+  });
+
+  // Services page
+  app.get('/hwin/services', async (req, res) => {
+    await servePageWithMeta(res, {
+      path: '/hwin/services',
+      title: 'Our Services - HwinNwin',
+      description: 'Comprehensive AI automation and creative systems solutions designed to scale your business with structure, mindset, and excellence. Professional consulting services in Melbourne, Australia.',
+      ogTitle: 'Our Services - HwinNwin',
+      ogDescription: 'From AI automation to creative systems implementation, we offer comprehensive business solutions starting from AUD 5,000. Melbourne-based consulting.',
+      keywords: ['AI automation services', 'creative systems', 'business consulting Melbourne', 'strategic planning', 'implementation support', 'custom solutions']
+    });
+  });
+
+  // About page
+  app.get('/hwin/about', async (req, res) => {
+    await servePageWithMeta(res, {
+      path: '/hwin/about',
+      title: 'About HwinNwin - Structure, Mindset, Excellence',
+      description: 'Learn about HwinNwin\'s mission to help businesses scale with structure, mindset, and excellence through our proven 3P Check methodology. Melbourne-based business consultants.',
+      ogTitle: 'About HwinNwin - Structure, Mindset, Excellence',
+      ogDescription: 'Discover how HwinNwin helps Australian businesses achieve sustainable growth through our proven 3P Check: Power, Balance, and Prosperity.',
+      keywords: ['HwinNwin', 'business consulting', '3P Check methodology', 'structure mindset excellence', 'Melbourne consultants', 'sustainable growth']
+    });
+  });
+
+  // Case Studies / Work page
+  app.get('/hwin/work', async (req, res) => {
+    await servePageWithMeta(res, {
+      path: '/hwin/work',
+      title: 'Our Work - Case Studies | HwinNwin',
+      description: 'Explore our proven case studies showcasing AI automation and creative systems implementations. Real results from Melbourne businesses across various industries.',
+      ogTitle: 'Our Work - Case Studies | HwinNwin',
+      ogDescription: 'See how we\'ve helped Australian businesses scale with AI automation, creative systems, and strategic implementations. Real results, measurable impact.',
+      keywords: ['case studies', 'business automation results', 'Melbourne consulting success', 'AI implementation examples', 'creative systems case studies']
+    });
+  });
+
+  // Individual case study pages
+  app.get('/hwin/work/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const filePath = path.join(process.cwd(), 'content', 'case-studies', `${slug}.mdx`);
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const { data } = matter(fileContent);
+      
+      await servePageWithMeta(res, {
+        path: `/hwin/work/${slug}`,
+        title: `${data.title || slug} - Case Study | HwinNwin`,
+        description: data.summary || `Detailed case study showing how HwinNwin helped implement ${data.title || slug} solution for improved business outcomes.`,
+        ogTitle: `${data.title || slug} - Case Study | HwinNwin`,
+        ogDescription: data.summary || `Real-world implementation case study: ${data.title || slug}. See measurable results and business impact.`,
+        keywords: data.tags || ['case study', 'business consulting', 'implementation', 'results']
+      });
+    } catch (error) {
+      console.error(`Error serving case study ${req.params.slug}:`, error);
+      res.status(404).send('Case study not found');
+    }
+  });
+
+  // Blog / Insights page
+  app.get('/hwin/insights', async (req, res) => {
+    await servePageWithMeta(res, {
+      path: '/hwin/insights',
+      title: 'Business Insights & Articles | HwinNwin',
+      description: 'Strategic business insights, AI automation guides, and creative systems articles. Expert advice from Melbourne consultants on scaling your business effectively.',
+      ogTitle: 'Business Insights & Articles | HwinNwin',
+      ogDescription: 'Read expert insights on business scaling, AI automation, and creative systems from Melbourne-based consultants. Practical advice for sustainable growth.',
+      keywords: ['business insights', 'AI automation guides', 'scaling strategies', 'Melbourne business advice', 'creative systems blog', 'consulting articles']
+    });
+  });
+
+  // Individual blog post pages
+  app.get('/hwin/insights/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const filePath = path.join(process.cwd(), 'content', 'blog', `${slug}.mdx`);
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const { data } = matter(fileContent);
+      
+      await servePageWithMeta(res, {
+        path: `/hwin/insights/${slug}`,
+        title: `${data.title || slug} | HwinNwin Blog`,
+        description: data.summary || data.description || `Expert insights on ${data.title || slug} from HwinNwin business consultants. Practical advice for scaling your business.`,
+        ogTitle: `${data.title || slug} | HwinNwin Blog`,
+        ogDescription: data.summary || data.description || `Business insights: ${data.title || slug}. Expert advice from Melbourne consultants on scaling and automation.`,
+        keywords: data.tags || ['business insights', 'scaling', 'automation', 'consulting']
+      });
+    } catch (error) {
+      console.error(`Error serving blog post ${req.params.slug}:`, error);
+      res.status(404).send('Blog post not found');
+    }
+  });
+
+  // Contact page
+  app.get('/hwin/contact', async (req, res) => {
+    await servePageWithMeta(res, {
+      path: '/hwin/contact',
+      title: 'Contact Us - Get Started Today | HwinNwin',
+      description: 'Ready to scale your business? Contact HwinNwin for AI automation, creative systems, and strategic consulting. Melbourne-based consultants ready to help.',
+      ogTitle: 'Contact Us - Get Started Today | HwinNwin',
+      ogDescription: 'Start your business transformation today. Contact Melbourne-based consultants for AI automation, creative systems, and strategic planning services.',
+      keywords: ['contact business consultants', 'Melbourne consulting', 'AI automation consultation', 'business scaling help', 'get started']
+    });
+  });
 
   // Content API endpoints for MDX processing
   app.get('/api/content/case-studies', async (req, res) => {
@@ -179,7 +467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         other: "Other"
       };
 
-      const serviceLabel = service && service !== "" && serviceLabels[service] ? serviceLabels[service] : service || "Not specified";
+      const serviceLabel = service && serviceLabels[service] ? serviceLabels[service] : service || "Not specified";
       
       // Send notification email to business
       const businessEmailResult = await emailService.sendEmail({
@@ -525,7 +813,7 @@ Melbourne, Australia
           quote.customerName,
           quoteUrl,
           pdfUrl,
-          calculation?.totalIncGST || 0
+          (calculation as any)?.totalIncGST || 0
         );
 
         if (emailResult.success) {

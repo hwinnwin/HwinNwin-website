@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { getAllBlogPosts } from "@/lib/contentLoader";
 import { ArrowRight, Calendar, User } from "lucide-react";
+import { SeoHead } from "@/components/seo/SeoHead";
+import { SITE_CONFIG } from "@/lib/constants";
 
 export default function BlogPage() {
   const { data: blogPosts, isLoading } = useQuery({
@@ -33,6 +35,15 @@ export default function BlogPage() {
 
   return (
     <MarketingLayout>
+      {/* SEO */}
+      <SeoHead 
+        title="Insights & Ideas - Business Strategy Blog | HwinNwin"
+        description="Practical business wisdom for scaling your company. Short insights with real impact from Melbourne's leading business consultants. Structure, mindset, excellence."
+        ogTitle="Business Insights & Strategy Blog | HwinNwin"
+        ogDescription="Practical wisdom for scaling your business. Short insights. Real impact. Business strategy and consulting advice from Melbourne experts."
+        canonicalUrl={`${SITE_CONFIG.baseUrl}/hwin/insights`}
+        keywords={['business insights', 'strategy blog', 'consulting advice', 'scaling business', 'Melbourne business', 'practical wisdom']}
+      />
       {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-background to-muted/20" data-testid="blog-hero">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

@@ -6,6 +6,9 @@ import { Link } from "wouter";
 import { loadAboutContent, loadBrandData } from "@/lib/contentLoader";
 import { ArrowRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { SeoHead } from "@/components/seo/SeoHead";
+import { SITE_CONFIG } from "@/lib/constants";
 
 export default function AboutPage() {
   const { data: aboutContent, isLoading: aboutLoading } = useQuery({
@@ -28,8 +31,59 @@ export default function AboutPage() {
     );
   }
 
+  // Structured Data for SEO
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "HwinNwin",
+    "legalName": "HwinNwin Pty Ltd",
+    "url": SITE_CONFIG.baseUrl,
+    "description": "HwinNwin helps businesses scale with structure, mindset, and excellence through our proven 3P Check methodology.",
+    "slogan": "Helping Businesses Scale with Structure, Mindset, and Excellence",
+    "foundingLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Melbourne",
+        "addressRegion": "Victoria",
+        "addressCountry": "AU"
+      }
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Melbourne",
+      "addressRegion": "Victoria", 
+      "addressCountry": "AU"
+    },
+    "areaServed": "AU",
+    "knowsAbout": ["Business Consulting", "Strategic Planning", "Implementation Support", "Structure", "Mindset", "Excellence"]
+  };
+
+  const aboutPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About HwinNwin",
+    "description": "Learn about HwinNwin's mission to help businesses scale with structure, mindset, and excellence through our 3P Check methodology.",
+    "url": `${SITE_CONFIG.baseUrl}/hwin/about`,
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "HwinNwin"
+    }
+  };
+
   return (
     <MarketingLayout>
+      {/* SEO */}
+      <SeoHead 
+        title="About HwinNwin - Structure, Mindset, Excellence"
+        description="Learn about HwinNwin's mission to help businesses scale with structure, mindset, and excellence through our proven 3P Check methodology. Melbourne-based business consultants."
+        ogTitle="About HwinNwin - Structure, Mindset, Excellence"
+        ogDescription="Discover how HwinNwin helps Australian businesses achieve sustainable growth through our proven 3P Check: Power, Balance, and Prosperity."
+        canonicalUrl={`${SITE_CONFIG.baseUrl}/hwin/about`}
+        keywords={["HwinNwin", "business consulting", "3P Check methodology", "structure mindset excellence", "Melbourne consultants", "sustainable growth"]}
+      />
+      <JsonLd json={organizationSchema} />
+      <JsonLd json={aboutPageSchema} />
       {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-background to-muted/20" data-testid="about-hero">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
