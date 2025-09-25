@@ -9,8 +9,9 @@ export default function TopNavigation() {
   
   const navItems = [
     { href: "/", label: "Home" },
-    { href: "/auto-quoter-case-study", label: "Auto Quoter Case Study" },
-    { href: "/panel-quote", label: "Panel Quote" },
+    { href: "/hwin/services", label: "Services" },
+    { href: "/hwin/work", label: "Case Studies" },
+    { href: "/projects", label: "Projects" },
   ];
 
   const isActive = (href: string) => {
@@ -32,7 +33,7 @@ export default function TopNavigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-8">
+          <div className="hidden md:flex md:items-center md:space-x-8 justify-center flex-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
