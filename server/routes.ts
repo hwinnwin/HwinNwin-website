@@ -758,32 +758,6 @@ Melbourne, Australia
     next();
   });
 
-  // Debug route to echo request body and headers (temporary)
-  app.post('/api/debug/echo', upload.array('photos', 10), async (req, res) => {
-    try {
-      const files = req.files as Express.Multer.File[] || [];
-      
-      console.log('=== DEBUG ECHO ===');
-      console.log('Headers:', req.headers);
-      console.log('Body:', req.body);
-      console.log('Files:', files.map(f => ({ name: f.originalname, size: f.size })));
-      console.log('==================');
-      
-      res.status(200).json({
-        headers: req.headers,
-        body: req.body,
-        files: files.map(f => ({ 
-          originalname: f.originalname, 
-          size: f.size, 
-          mimetype: f.mimetype 
-        }))
-      });
-    } catch (error) {
-      console.error('Debug echo error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
   // Quote submission (customer)
   app.post('/api/quote', upload.array('photos', 10), async (req, res) => {
     try {
@@ -802,8 +776,6 @@ Melbourne, Australia
         for (const file of files) {
           await imageService.deleteImage(file.filename);
         }
-        console.log('Quote validation failed:', validationResult.error.errors);
-        console.log('Request body received:', req.body);
         return res.status(422).json({ 
           message: "Validation failed", 
           errors: validationResult.error.errors,
