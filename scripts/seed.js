@@ -200,7 +200,7 @@ db.prepare(`
   quoteId2,
   "Sarah Johnson",
   5,
-  "Excellent service! The quote was accurate and the repair quality was outstanding. Highly recommend Lee Murdok Panels.",
+  "Excellent service! The quote was accurate and the repair quality was outstanding. Highly recommend this auto repair service.",
   1
 );
 

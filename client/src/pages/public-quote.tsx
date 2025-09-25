@@ -120,7 +120,7 @@ export default function PublicQuote() {
               <Car className="text-primary-foreground text-xl" size={24} />
             </div>
             <div className="text-left">
-              <h1 className="text-2xl font-bold">Lee Murdok Panels</h1>
+              <h1 className="text-2xl font-bold">Auto Panel Repair</h1>
               <p className="text-primary-foreground/80">Professional Auto Damage Assessment</p>
             </div>
           </div>
@@ -310,7 +310,7 @@ export default function PublicQuote() {
 
       {/* Footer */}
       <footer className="text-center py-8 text-xs text-muted-foreground">
-        <p>&copy; 2024 Lee Murdok Panels. All rights reserved. | Licensed Motor Vehicle Trader</p>
+        <p>&copy; 2024 Auto Panel Repair. All rights reserved. | Licensed Motor Vehicle Trader</p>
         <p className="mt-1">Generated on {new Date().toLocaleDateString('en-AU')} at {new Date().toLocaleTimeString('en-AU')}</p>
       </footer>
     </div>

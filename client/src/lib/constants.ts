@@ -89,9 +89,9 @@ export const FILE_VALIDATION = {
 
 export const CONTACT_INFO = {
   phone: "(03) 9123 4567",
-  email: "quotes@leemurdokpanels.com.au",
+  email: "quotes@panelrepair.com",
   address: "Melbourne, VIC",
-  businessName: "Lee Murdok Panels",
+  businessName: "Auto Panel Repair",
   tagline: "Professional Auto Damage Assessment"
 };
 

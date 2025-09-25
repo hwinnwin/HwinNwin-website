@@ -38,7 +38,7 @@ export default function CustomerForm() {
                   <i className="fas fa-car text-primary-foreground text-lg"></i>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Lee Murdok Panels</h1>
+                  <h1 className="text-xl font-bold text-foreground">Auto Panel Repair</h1>
                   <p className="text-xs text-muted-foreground">Professional Auto Damage Assessment</p>
                 </div>
               </div>
