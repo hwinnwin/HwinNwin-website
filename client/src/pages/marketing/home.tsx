@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,12 +11,82 @@ import { ArrowRight, CheckCircle } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SeoHead } from "@/components/seo/SeoHead";
 import { SITE_CONFIG } from "@/lib/constants";
+import PinModal from "@/components/pin-modal";
 
 export default function HomePage() {
+  const [location, navigate] = useLocation();
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [keySequence, setKeySequence] = useState<string[]>([]);
+  const [tapCount, setTapCount] = useState(0);
+  const [lastTapTime, setLastTapTime] = useState(0);
+  
+  // Secret key sequence: ArrowUp, ArrowUp, ArrowDown, ArrowDown, o, w, n, e, r
+  const secretSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'o', 'w', 'n', 'e', 'r'];
+  
   const { data: siteData, isLoading } = useQuery({
     queryKey: ["site-data"],
     queryFn: loadSiteData,
   });
+  
+  // Handle multi-tap mobile trigger
+  const handleLogoTap = () => {
+    const now = Date.now();
+    const tapWindow = 2000; // 2 second window for taps
+    
+    if (now - lastTapTime > tapWindow) {
+      // Reset if too much time has passed
+      setTapCount(1);
+    } else {
+      setTapCount(prev => prev + 1);
+    }
+    
+    setLastTapTime(now);
+    
+    // Trigger after 7 rapid taps
+    if (tapCount >= 6) { // 6 previous + 1 current = 7
+      setShowPinModal(true);
+      setTapCount(0);
+    }
+  };
+  
+  // Listen for secret key sequence (desktop only, suppress in inputs)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Suppress if focused on an input, textarea, or contenteditable element
+      const activeElement = document.activeElement as HTMLElement;
+      if (activeElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.contentEditable === 'true'
+      )) {
+        return;
+      }
+      
+      const key = event.key;
+      
+      setKeySequence(prev => {
+        const newSequence = [...prev, key].slice(-secretSequence.length);
+        
+        // Check if the sequence matches
+        if (newSequence.length === secretSequence.length &&
+            newSequence.every((k, i) => k === secretSequence[i])) {
+          // Secret sequence detected
+          setShowPinModal(true);
+          return [];
+        }
+        
+        return newSequence;
+      });
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+  
+  const handlePinSuccess = () => {
+    setShowPinModal(false);
+    navigate('/owner');
+  };
 
   if (isLoading) {
     return (
@@ -104,7 +176,11 @@ export default function HomePage() {
       <section className="py-20 lg:py-32 bg-gradient-to-b from-background to-muted/20" data-testid="hero-section">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            <h1 className="text-4xl lg:text-6xl font-bold text-charcoal dark:text-hwin-white leading-tight" data-testid="hero-headline">
+            <h1 
+              className="text-4xl lg:text-6xl font-bold text-charcoal dark:text-hwin-white leading-tight cursor-default select-none" 
+              data-testid="hero-headline"
+              onClick={handleLogoTap}
+            >
               {homeData?.hero.headline || "Helping Businesses Scale with Structure, Mindset, and Excellence"}
             </h1>
             
@@ -231,6 +307,12 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      
+      <PinModal 
+        isOpen={showPinModal} 
+        onClose={() => setShowPinModal(false)} 
+        onSuccess={handlePinSuccess} 
+      />
     </MarketingLayout>
   );
 }
