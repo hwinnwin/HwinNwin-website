@@ -89,6 +89,10 @@ export class SqliteStorage implements IStorage {
         sendgrid_api_key TEXT,
         from_email TEXT DEFAULT 'quotes@leemurdokpanels.com.au',
         site_url TEXT DEFAULT 'https://lee888.com.au',
+        two_fa_enabled INTEGER NOT NULL DEFAULT 0,
+        two_fa_email TEXT,
+        otp_secret TEXT,
+        otp_expires_at TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
@@ -455,6 +459,10 @@ export class SqliteStorage implements IStorage {
       sendgridApiKey: result.sendgrid_api_key,
       fromEmail: result.from_email,
       siteUrl: result.site_url,
+      twoFaEnabled: Boolean(result.two_fa_enabled),
+      twoFaEmail: result.two_fa_email,
+      otpSecret: result.otp_secret,
+      otpExpiresAt: result.otp_expires_at,
       createdAt: result.created_at,
       updatedAt: result.updated_at
     };
