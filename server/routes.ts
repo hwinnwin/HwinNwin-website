@@ -860,9 +860,10 @@ Melbourne, Australia
         photoValidation.isValid
       );
 
-      // Create quote
+      // Create quote with legacy customerName field for backward compatibility
       const quote = await storage.createQuote({
         ...quoteData,
+        customerName: `${quoteData.customerFirstName} ${quoteData.customerLastName}`,
         itemsJson: JSON.stringify(quoteData.items),
         ratesJson: JSON.stringify(rates),
         calcJson: JSON.stringify(calculation),

@@ -19,7 +19,8 @@ import DamageAssessment from "./damage-assessment";
 import type { DamageItem } from "@shared/schema";
 
 const customerFormSchema = z.object({
-  customerName: z.string().min(1, "Name is required"),
+  customerFirstName: z.string().min(1, "First name is required"),
+  customerLastName: z.string().min(1, "Last name is required"),
   customerPhone: z.string().min(10, "Valid phone number is required"),
   customerEmail: z.string().email("Valid email is required"),
   vehicleRego: z.string().min(1, "Registration is required"),
@@ -54,7 +55,8 @@ export default function QuoteForm({ onSubmitted }: QuoteFormProps) {
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
-      customerName: "",
+      customerFirstName: "",
+      customerLastName: "",
       customerPhone: "",
       customerEmail: "",
       vehicleRego: "",
@@ -73,7 +75,7 @@ export default function QuoteForm({ onSubmitted }: QuoteFormProps) {
       console.log('Mutation data received:', data);
       
       // Validate that we have required data
-      if (!data.customerName || !data.customerEmail) {
+      if (!data.customerFirstName || !data.customerLastName || !data.customerEmail) {
         throw new Error('Required form fields are missing');
       }
       
@@ -161,12 +163,25 @@ export default function QuoteForm({ onSubmitted }: QuoteFormProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="customerName"
+                    name="customerFirstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name *</FormLabel>
+                        <FormLabel>First Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="John Smith" {...field} data-testid="input-customer-name" />
+                          <Input placeholder="John" {...field} data-testid="input-customer-first-name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="customerLastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Smith" {...field} data-testid="input-customer-last-name" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

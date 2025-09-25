@@ -34,7 +34,9 @@ export const quotes = sqliteTable("quotes", {
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   
   // Customer info
-  customerName: text("customer_name").notNull(),
+  customerName: text("customer_name"), // Legacy field for backward compatibility
+  customerFirstName: text("customer_first_name"),
+  customerLastName: text("customer_last_name"), 
   customerPhone: text("customer_phone").notNull(),
   customerEmail: text("customer_email").notNull(),
   
@@ -99,11 +101,14 @@ export const insertQuoteSchema = createInsertSchema(quotes).omit({
   createdAt: true,
   updatedAt: true,
   customerLinkSlug: true,
+  customerName: true, // Omit legacy field
   itemsJson: true,  // Omit server-generated fields
   ratesJson: true,
   calcJson: true,
   photosJson: true
 }).extend({
+  customerFirstName: z.string().min(1, "First name is required"),
+  customerLastName: z.string().min(1, "Last name is required"),
   items: z.array(z.object({
     panel: z.string().min(1),
     severity: z.enum(["minor", "moderate", "severe"]),
