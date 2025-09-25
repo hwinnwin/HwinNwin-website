@@ -136,6 +136,81 @@ The Lee Murdok Panels Team
     });
   }
 
+  async sendOTPCode(
+    email: string,
+    otp: string,
+    expiryMinutes: number = 5
+  ): Promise<{ success: boolean; error?: string }> {
+    const subject = "Your HwinNwin Security Code";
+    
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #1E40AF; color: white; padding: 20px; text-align: center;">
+          <h1>HwinNwin</h1>
+          <p>Security Verification</p>
+        </div>
+        
+        <div style="padding: 20px;">
+          <h2>Your Security Code</h2>
+          
+          <p>A sign-in attempt was made for your HwinNwin owner account. Please use the verification code below to complete the login process:</p>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; border: 2px solid #1E40AF;">
+            <h1 style="color: #1E40AF; font-size: 36px; margin: 0; letter-spacing: 8px; font-family: monospace;">${otp}</h1>
+            <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">Security Code</p>
+          </div>
+          
+          <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107;">
+            <p style="margin: 0;"><strong>Important Security Information:</strong></p>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+              <li>This code expires in ${expiryMinutes} minutes</li>
+              <li>This code can only be used once</li>
+              <li>Never share this code with anyone</li>
+            </ul>
+          </div>
+          
+          <p>If you did not attempt to sign in, please secure your account by changing your PIN immediately.</p>
+          
+          <p>For security questions, contact support at the email address below.</p>
+          
+          <p>Best regards,<br>
+          The HwinNwin Security Team</p>
+        </div>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+          <p>This is an automated security message. Please do not reply to this email.</p>
+          <p>&copy; 2024 HwinNwin. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
+    const text = `
+Your HwinNwin Security Code
+
+A sign-in attempt was made for your HwinNwin owner account.
+
+Your verification code: ${otp}
+
+IMPORTANT:
+- This code expires in ${expiryMinutes} minutes
+- This code can only be used once  
+- Never share this code with anyone
+
+If you did not attempt to sign in, please secure your account immediately.
+
+Best regards,
+The HwinNwin Security Team
+    `;
+
+    return this.sendEmail({
+      to: email,
+      from: this.fromEmail,
+      subject,
+      text,
+      html
+    });
+  }
+
   async sendApprovedQuote(
     customerEmail: string,
     customerName: string,

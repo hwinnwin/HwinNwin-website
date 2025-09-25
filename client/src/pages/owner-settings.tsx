@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useOwnerAuth } from "@/hooks/use-owner-auth";
@@ -24,7 +25,9 @@ import {
   Mail,
   CheckCircle,
   AlertTriangle,
-  Settings
+  Settings,
+  ShieldCheck,
+  ShieldX
 } from "lucide-react";
 
 const settingsSchema = z.object({
@@ -50,8 +53,23 @@ const pinChangeSchema = z.object({
   path: ["confirmPin"]
 });
 
+const twoFaSettingsSchema = z.object({
+  twoFaEnabled: z.boolean(),
+  twoFaEmail: z.string().email("Please enter a valid email address").optional().or(z.literal(""))
+}).refine(data => {
+  // If 2FA is enabled, email must be provided
+  if (data.twoFaEnabled && (!data.twoFaEmail || data.twoFaEmail === "")) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Email address is required when enabling 2FA",
+  path: ["twoFaEmail"]
+});
+
 type SettingsFormData = z.infer<typeof settingsSchema>;
 type PinChangeFormData = z.infer<typeof pinChangeSchema>;
+type TwoFaSettingsFormData = z.infer<typeof twoFaSettingsSchema>;
 
 interface Settings {
   labourRate: number;
@@ -65,6 +83,12 @@ interface Settings {
   fromEmail: string;
   siteUrl: string;
   sendgridApiKey?: string;
+}
+
+interface TwoFaSettings {
+  twoFaEnabled: boolean;
+  twoFaEmail: string;
+  hasEmailService: boolean;
 }
 
 export default function OwnerSettings() {
@@ -99,6 +123,35 @@ export default function OwnerSettings() {
       confirmPin: ""
     }
   });
+
+  // 2FA Settings query and form
+  const { data: twoFaSettings, isLoading: isTwoFaLoading } = useQuery<TwoFaSettings>({
+    queryKey: ['/api/owner/2fa-settings'],
+    enabled: shouldMakeApiCalls,
+    retry: (failureCount, error: any) => {
+      if (error?.message?.includes('401')) {
+        handle401Error();
+        return false;
+      }
+      return failureCount < 3;
+    }
+  });
+
+  const twoFaForm = useForm<TwoFaSettingsFormData>({
+    resolver: zodResolver(twoFaSettingsSchema),
+    defaultValues: {
+      twoFaEnabled: false,
+      twoFaEmail: ""
+    }
+  });
+
+  // Update form when 2FA settings data loads
+  if (twoFaSettings && !twoFaForm.getValues().twoFaEmail && twoFaSettings.twoFaEmail) {
+    twoFaForm.reset({
+      twoFaEnabled: twoFaSettings.twoFaEnabled,
+      twoFaEmail: twoFaSettings.twoFaEmail
+    });
+  }
 
   // Update form when settings data loads
   if (settings && !settingsForm.getValues().labourRate) {
@@ -144,12 +197,35 @@ export default function OwnerSettings() {
     }
   });
 
+  const updateTwoFaMutation = useMutation({
+    mutationFn: (data: TwoFaSettingsFormData) => 
+      apiRequest('PATCH', '/api/owner/2fa-settings', data),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/owner/2fa-settings'] });
+      toast({
+        title: "2FA Settings Updated",
+        description: data.message || "Your 2FA settings have been saved successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "2FA Update Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   const onSettingsSubmit = (data: SettingsFormData) => {
     updateSettingsMutation.mutate(data);
   };
 
   const onPinSubmit = (data: PinChangeFormData) => {
     changePinMutation.mutate(data);
+  };
+
+  const onTwoFaSubmit = (data: TwoFaSettingsFormData) => {
+    updateTwoFaMutation.mutate(data);
   };
 
   // Show loading state while waiting for authentication
@@ -536,7 +612,7 @@ export default function OwnerSettings() {
                 Security
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-8">
               {!showPinChange ? (
                 <div className="text-center py-6">
                   <p className="text-muted-foreground mb-4">

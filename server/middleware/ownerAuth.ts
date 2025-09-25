@@ -8,6 +8,7 @@ import { comparePin, isPinHashed } from "../services/pinService";
 declare module 'express-session' {
   interface SessionData {
     isOwner?: boolean;
+    pending2FA?: boolean;
   }
 }
 
@@ -59,6 +60,14 @@ export function requireOwnerSession(req: Request, res: Response, next: NextFunct
   }
   
   res.status(401).json({ message: "Owner session required" });
+}
+
+export function requirePending2FA(req: Request, res: Response, next: NextFunction) {
+  if (req.session?.pending2FA && !req.session.isOwner) {
+    return next();
+  }
+  
+  res.status(401).json({ message: "Pending 2FA verification required" });
 }
 
 // Rate-limited PIN change middleware - reuse general rate limiter
