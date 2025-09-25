@@ -9,12 +9,10 @@ export default function MarketingNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const navItems = [
-    { href: "/hwin", label: "Home" },
     { href: "/hwin/services", label: "Services" },
     { href: "/hwin/about", label: "About" },
     { href: "/hwin/work", label: "Case Studies" },
     { href: "/hwin/insights", label: "Blog" },
-    { href: "/hwin/contact", label: "Contact" },
   ];
 
   const isActive = (href: string) => {
@@ -33,10 +31,10 @@ export default function MarketingNav() {
             <img 
               src={logoUrl} 
               alt="HwinNwin Logo" 
-              className="h-8 w-8 opacity-90 transition-opacity hover:opacity-100"
+              className="h-10 w-10 opacity-90 transition-all duration-200 hover:opacity-100 hover:scale-105"
               data-testid="logo-image"
             />
-            <span className="text-xl font-medium tracking-tight text-charcoal dark:text-hwin-white">
+            <span className="text-xl font-bold tracking-tight text-charcoal dark:text-hwin-white transition-colors hover:text-gold">
               HwinNwin
             </span>
           </Link>
