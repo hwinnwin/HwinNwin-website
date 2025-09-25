@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import MarketingLayout from "@/components/layout/MarketingLayout";
+import HomeWithTopNav from "@/components/layout/HomeWithTopNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -90,22 +90,22 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <MarketingLayout>
+      <HomeWithTopNav>
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-pulse text-gold">Loading...</div>
         </div>
-      </MarketingLayout>
+      </HomeWithTopNav>
     );
   }
 
   // Add safety checks for content data
   if (!siteData || !siteData.home || !siteData.brand) {
     return (
-      <MarketingLayout>
+      <HomeWithTopNav>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-muted-foreground">Content not available</div>
         </div>
-      </MarketingLayout>
+      </HomeWithTopNav>
     );
   }
 
@@ -160,7 +160,7 @@ export default function HomePage() {
   };
 
   return (
-    <MarketingLayout>
+    <HomeWithTopNav>
       {/* SEO */}
       <SeoHead 
         title="HwinNwin - AI Automation & Creative Ecosystems"
@@ -313,6 +313,6 @@ export default function HomePage() {
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePinSuccess} 
       />
-    </MarketingLayout>
+    </HomeWithTopNav>
   );
 }

@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import QuoteForm from "@/components/quote-form";
 import { CheckCircle, Clock, Phone, Mail, MapPin, AlertCircle } from "lucide-react";
+import TopNavigation from "@/components/TopNavigation";
 
 export default function CustomerForm() {
   const [submissionState, setSubmissionState] = useState<{
@@ -25,6 +26,9 @@ export default function CustomerForm() {
   if (submissionState.isSubmitted) {
     return (
       <div className="min-h-screen bg-background">
+        {/* Top Navigation */}
+        <TopNavigation />
+        
         {/* Navigation Header */}
         <nav className="bg-card border-b border-border sticky top-0 z-50 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -100,6 +104,9 @@ export default function CustomerForm() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top Navigation */}
+      <TopNavigation />
+      
       {/* Navigation Header */}
       <nav className="bg-card border-b border-border sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
