@@ -30,12 +30,12 @@ db.exec(`
     metallic_multiplier REAL NOT NULL DEFAULT 1.15,
     pearlescent_multiplier REAL NOT NULL DEFAULT 1.25,
     min_job REAL NOT NULL DEFAULT 220,
-    logo_url TEXT DEFAULT '/static/lee-logo.png',
+    logo_url TEXT DEFAULT '/static/auto-panel-logo.png',
     primary_color TEXT DEFAULT '#1E40AF',
     owner_pin TEXT NOT NULL DEFAULT '123456',
     sendgrid_api_key TEXT,
-    from_email TEXT DEFAULT 'quotes@leemurdokpanels.com.au',
-    site_url TEXT DEFAULT 'https://lee888.com.au',
+    from_email TEXT DEFAULT 'quotes@panelrepair.com',
+    site_url TEXT DEFAULT 'https://panelrepair.com',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
