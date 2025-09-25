@@ -81,43 +81,55 @@ export interface MdxContent<T = Record<string, any>> {
 // Content loader functions
 export async function loadBrandData(): Promise<BrandData> {
   try {
+    console.log('🔄 Loading brand data...');
     const response = await fetch('/content/brand.yaml');
     if (!response.ok) {
-      throw new Error(`Failed to load brand.yaml: ${response.status}`);
+      throw new Error(`Failed to load brand.yaml: ${response.status} ${response.statusText}`);
     }
     const yamlContent = await response.text();
-    return yaml.parse(yamlContent) as BrandData;
+    console.log('✅ Brand YAML loaded, parsing...');
+    const parsed = yaml.parse(yamlContent) as BrandData;
+    console.log('✅ Brand data parsed successfully');
+    return parsed;
   } catch (error) {
-    console.error('Error loading brand data:', error);
-    throw new Error('Failed to load brand data');
+    console.error('❌ Error loading brand data:', error);
+    throw new Error(`Failed to load brand data: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 export async function loadServicesData(): Promise<ServicesData> {
   try {
+    console.log('🔄 Loading services data...');
     const response = await fetch('/content/services.yaml');
     if (!response.ok) {
-      throw new Error(`Failed to load services.yaml: ${response.status}`);
+      throw new Error(`Failed to load services.yaml: ${response.status} ${response.statusText}`);
     }
     const yamlContent = await response.text();
-    return yaml.parse(yamlContent) as ServicesData;
+    console.log('✅ Services YAML loaded, parsing...');
+    const parsed = yaml.parse(yamlContent) as ServicesData;
+    console.log('✅ Services data parsed successfully');
+    return parsed;
   } catch (error) {
-    console.error('Error loading services data:', error);
-    throw new Error('Failed to load services data');
+    console.error('❌ Error loading services data:', error);
+    throw new Error(`Failed to load services data: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 export async function loadHomeData(): Promise<HomeData> {
   try {
+    console.log('🔄 Loading home data...');
     const response = await fetch('/content/home.yaml');
     if (!response.ok) {
-      throw new Error(`Failed to load home.yaml: ${response.status}`);
+      throw new Error(`Failed to load home.yaml: ${response.status} ${response.statusText}`);
     }
     const yamlContent = await response.text();
-    return yaml.parse(yamlContent) as HomeData;
+    console.log('✅ Home YAML loaded, parsing...');
+    const parsed = yaml.parse(yamlContent) as HomeData;
+    console.log('✅ Home data parsed successfully');
+    return parsed;
   } catch (error) {
-    console.error('Error loading home data:', error);
-    throw new Error('Failed to load home data');
+    console.error('❌ Error loading home data:', error);
+    throw new Error(`Failed to load home data: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -231,15 +243,99 @@ export interface SiteData {
 
 export async function loadSiteData(): Promise<SiteData> {
   try {
+    console.log('🔄 Loading site data for Safari/mobile...');
+    
     const [brand, services, home] = await Promise.all([
       loadBrandData(),
       loadServicesData(),
       loadHomeData()
     ]);
 
+    console.log('✅ All site data loaded successfully');
     return { brand, services, home };
   } catch (error) {
-    console.error('Error loading site data:', error);
-    throw new Error('Failed to load site data');
+    console.error('❌ Error loading site data:', error);
+    
+    // Provide fallback data for Safari/mobile compatibility
+    console.log('🔄 Providing fallback data to prevent blank screen...');
+    return {
+      brand: {
+        name: "HwinNwin",
+        tagline: "Helping Businesses Scale with Structure, Mindset, and Excellence",
+        pillars: ["AI Automation", "Creative Systems", "Strategic Planning"],
+        voice: {
+          tone: "Professional and supportive",
+          rules: ["Clear communication", "Results-focused", "Empowering"]
+        },
+        organization: {
+          legal_name: "HwinNwin Pty Ltd",
+          hq: "Melbourne, Australia",
+          email_public: "hello@hwinnwin.com",
+          booking_link: "/hwin/contact"
+        }
+      },
+      services: {
+        items: [
+          {
+            name: "AI Automation",
+            promise: "Streamline your operations with intelligent automation",
+            outcomes: ["Increased efficiency", "Reduced costs", "Better accuracy"],
+            from_aud: 2500
+          },
+          {
+            name: "Creative Systems",
+            promise: "Build creative workflows that scale",
+            outcomes: ["Consistent quality", "Faster delivery", "Enhanced creativity"],
+            from_aud: 1500
+          },
+          {
+            name: "Strategic Planning",
+            promise: "Develop clear roadmaps for growth",
+            outcomes: ["Clear direction", "Aligned teams", "Measurable progress"],
+            from_aud: 3000
+          }
+        ]
+      },
+      home: {
+        hero: {
+          headline: "Helping Businesses Scale with Structure, Mindset, and Excellence",
+          sub: "We deliver powerful solutions with balanced approach for lasting prosperity.",
+          primary_cta: "Get Started",
+          secondary_cta: "View Our Work"
+        },
+        threeP: {
+          items: [
+            {
+              title: "Productive",
+              text: "Efficient systems that get results",
+              metric: "300% ROI"
+            },
+            {
+              title: "Profitable",
+              text: "Solutions that drive revenue growth",
+              metric: "2x Revenue"
+            },
+            {
+              title: "Peaceful",
+              text: "Stress-free operations and clarity",
+              metric: "90% Satisfaction"
+            }
+          ]
+        },
+        process: [
+          "Discovery & Analysis",
+          "Strategy Development", 
+          "Implementation",
+          "Optimization"
+        ],
+        logos: [],
+        faq: [
+          {
+            q: "How do you help businesses scale?",
+            a: "We provide AI automation, creative systems, and strategic planning to help businesses grow efficiently and sustainably."
+          }
+        ]
+      }
+    };
   }
 }
