@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { marketingContentSchema, type MarketingContent } from "@shared/schema";
+import { marketingContentSchema, type MarketingContent, type Page, insertPageSchema } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useOwnerAuth } from "@/hooks/use-owner-auth";
@@ -29,7 +33,13 @@ import {
   HelpCircle,
   Settings,
   Plus,
-  X
+  X,
+  FileText,
+  Edit3,
+  Trash2,
+  Eye,
+  ExternalLink,
+  Calendar
 } from "lucide-react";
 
 type ContentEditorFormData = MarketingContent;
@@ -73,6 +83,9 @@ const DEFAULTS: MarketingContent = {
 export default function ContentEditor() {
   const [location, navigate] = useLocation();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['brand']));
+  const [activeTab, setActiveTab] = useState<string>("marketing");
+  const [isCreatePageOpen, setIsCreatePageOpen] = useState(false);
+  const [editingPage, setEditingPage] = useState<Page | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isAuthenticated, showPinModal, onPinSuccess, onPinModalClose, handle401Error, shouldMakeApiCalls } = useOwnerAuth();
@@ -80,6 +93,19 @@ export default function ContentEditor() {
   // Fetch marketing content only when authenticated
   const { data: content, isLoading, error, refetch } = useQuery<MarketingContent>({
     queryKey: ['/api/content/marketing'],
+    enabled: shouldMakeApiCalls,
+    retry: (failureCount, error: any) => {
+      if (error?.status === 401 || error?.response?.status === 401) {
+        handle401Error();
+        return false;
+      }
+      return failureCount < 3;
+    }
+  });
+
+  // Fetch pages data when authenticated
+  const { data: pages, isLoading: pagesLoading, error: pagesError, refetch: refetchPages } = useQuery<Page[]>({
+    queryKey: ['/api/pages'],
     enabled: shouldMakeApiCalls,
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.response?.status === 401) {
@@ -270,11 +296,25 @@ export default function ContentEditor() {
           <p className="text-muted-foreground">Manage all marketing copy and content for your website</p>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            
-            {/* Brand Section */}
-            <Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="marketing" data-testid="tab-marketing">
+              <Palette className="mr-2 h-4 w-4" />
+              Marketing Content
+            </TabsTrigger>
+            <TabsTrigger value="pages" data-testid="tab-pages">
+              <FileText className="mr-2 h-4 w-4" />
+              Pages
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Marketing Content Tab */}
+          <TabsContent value="marketing" className="space-y-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                
+                {/* Brand Section */}
+                <Card>
               <Collapsible 
                 open={expandedSections.has('brand')} 
                 onOpenChange={() => toggleSection('brand')}
@@ -404,7 +444,20 @@ export default function ContentEditor() {
             </div>
           </form>
         </Form>
-      </div>
+      </TabsContent>
+
+      {/* Pages Tab */}
+      <TabsContent value="pages" className="space-y-6">
+        <PagesManagement 
+          pages={pages || []}
+          isLoading={pagesLoading}
+          error={pagesError}
+          onRefetch={refetchPages}
+        />
+      </TabsContent>
+
+    </Tabs>
+  </div>
       
       {/* PIN Modal */}
       <PinModal 
@@ -413,6 +466,376 @@ export default function ContentEditor() {
         onSuccess={onPinSuccess} 
       />
     </div>
+  );
+}
+
+// Pages Management Component
+interface PagesManagementProps {
+  pages: Page[];
+  isLoading: boolean;
+  error: any;
+  onRefetch: () => void;
+}
+
+function PagesManagement({ pages, isLoading, error, onRefetch }: PagesManagementProps) {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingPage, setEditingPage] = useState<Page | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Page creation mutation
+  const createPageMutation = useMutation({
+    mutationFn: (pageData: any) => apiRequest('POST', '/api/pages', pageData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/pages'] });
+      setIsCreateDialogOpen(false);
+      toast({
+        title: "Page Created",
+        description: "New page has been created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Create Page",
+        description: error.message || "An error occurred while creating the page",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Page deletion mutation
+  const deletePageMutation = useMutation({
+    mutationFn: (pageId: string) => apiRequest('DELETE', `/api/pages/${pageId}`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/pages'] });
+      toast({
+        title: "Page Deleted",
+        description: "Page has been deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Delete Page",
+        description: error.message || "An error occurred while deleting the page",
+        variant: "destructive"
+      });
+    }
+  });
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Alert variant="destructive" data-testid="alert-pages-error">
+          <AlertDescription className="flex items-center justify-between">
+            <div>
+              <strong>Failed to load pages</strong>
+              <br />
+              {error instanceof Error ? error.message : 'An unexpected error occurred.'}
+            </div>
+            <Button onClick={onRefetch} variant="outline" size="sm">
+              Try Again
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Pages Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Pages</h2>
+          <p className="text-muted-foreground">Create and manage custom pages for your website</p>
+        </div>
+        <Button 
+          onClick={() => setIsCreateDialogOpen(true)}
+          data-testid="button-create-page"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Create Page
+        </Button>
+      </div>
+
+      {/* Pages List */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index}>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  <Skeleton className="h-6 w-1/3" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : pages.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">No pages yet</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              Create your first custom page to get started
+            </p>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create First Page
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {pages.map((page) => (
+            <Card key={page.id} data-testid={`page-card-${page.id}`}>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold text-foreground">{page.title}</h3>
+                      <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
+                        {page.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">/{page.slug}</p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        Created {new Date(page.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        Updated {new Date(page.updatedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {page.status === 'published' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(`/${page.slug}`, '_blank')}
+                        data-testid={`button-view-${page.id}`}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingPage(page)}
+                      data-testid={`button-edit-${page.id}`}
+                    >
+                      <Edit3 className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this page?')) {
+                          deletePageMutation.mutate(page.id);
+                        }
+                      }}
+                      disabled={deletePageMutation.isPending}
+                      data-testid={`button-delete-${page.id}`}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Create Page Dialog */}
+      <CreatePageDialog
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSubmit={createPageMutation.mutate}
+        isLoading={createPageMutation.isPending}
+      />
+
+      {/* Edit Page Dialog */}
+      {editingPage && (
+        <EditPageDialog
+          page={editingPage}
+          isOpen={!!editingPage}
+          onClose={() => setEditingPage(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Create Page Dialog Component
+interface CreatePageDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: any) => void;
+  isLoading: boolean;
+}
+
+function CreatePageDialog({ isOpen, onClose, onSubmit, isLoading }: CreatePageDialogProps) {
+  const form = useForm({
+    resolver: zodResolver(insertPageSchema.omit({ content: true }).extend({
+      slug: z.string()
+        .min(1, "Slug is required")
+        .regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens")
+        .refine((slug) => !['admin', 'api', 'hwin', 'panel-quote', 'owner', 'q', 'legal'].includes(slug), 
+                "This slug is reserved"),
+    })),
+    defaultValues: {
+      title: "",
+      slug: "",
+      status: "draft" as const,
+      seoTitle: "",
+      seoDescription: ""
+    }
+  });
+
+  const handleSubmit = (data: any) => {
+    // Create basic page content structure
+    const content = JSON.stringify({
+      blocks: [
+        {
+          type: "hero",
+          title: data.title,
+          subtitle: "Welcome to " + data.title
+        }
+      ],
+      seo: {
+        title: data.seoTitle || data.title,
+        description: data.seoDescription
+      }
+    });
+
+    onSubmit({
+      ...data,
+      content
+    });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]" data-testid="dialog-create-page">
+        <DialogHeader>
+          <DialogTitle>Create New Page</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Page Title</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="My Awesome Page" 
+                      {...field} 
+                      onChange={(e) => {
+                        field.onChange(e);
+                        // Auto-generate slug from title
+                        const slug = e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9\s-]/g, '')
+                          .replace(/\s+/g, '-')
+                          .slice(0, 50);
+                        form.setValue('slug', slug);
+                      }}
+                      data-testid="input-page-title"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL Slug</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="my-awesome-page" 
+                      {...field}
+                      data-testid="input-page-slug"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-xs text-muted-foreground">
+                    Page will be accessible at: /{field.value}
+                  </p>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-page-status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="published">Published</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading} data-testid="button-create-page-submit">
+                {isLoading ? "Creating..." : "Create Page"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Edit Page Dialog Component  
+interface EditPageDialogProps {
+  page: Page;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+function EditPageDialog({ page, isOpen, onClose }: EditPageDialogProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" data-testid="dialog-edit-page">
+        <DialogHeader>
+          <DialogTitle>Edit Page: {page.title}</DialogTitle>
+        </DialogHeader>
+        <div className="text-center py-12 text-muted-foreground">
+          <FileText className="h-12 w-12 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Page Builder Coming Soon</h3>
+          <p>Advanced page building functionality will be available soon.</p>
+          <p className="text-sm mt-2">For now, you can manage basic page settings and status.</p>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

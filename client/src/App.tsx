@@ -20,6 +20,7 @@ import BlogPage from "@/pages/marketing/blog";
 import BlogPostPage from "@/pages/marketing/blog-post";
 import ContactPage from "@/pages/marketing/contact";
 import LegalPage from "@/pages/marketing/legal";
+import DynamicPage from "@/pages/dynamic-page";
 
 function Router() {
   return (
@@ -48,6 +49,9 @@ function Router() {
       
       {/* Legal Pages */}
       <Route path="/legal/:type" component={LegalPage} />
+      
+      {/* Dynamic Custom Pages - Must come after all specific routes */}
+      <Route path="/:slug" component={DynamicPage} />
       
       {/* 404 Handler */}
       <Route component={NotFound} />
