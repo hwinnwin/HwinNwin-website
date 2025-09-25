@@ -1,6 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
 import MemoryStore from "memorystore";
 import path from "path";
 import { registerRoutes } from "./routes";
@@ -22,23 +21,12 @@ if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET environment variable is required in production');
 }
 
-// Configure session store - use MemoryStore for dev, PostgreSQL for production
-let sessionStore;
-if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-  const PgSession = connectPgSimple(session);
-  sessionStore = new PgSession({
-    conString: process.env.DATABASE_URL,
-    tableName: 'session',
-    createTableIfMissing: true
-  });
-  log('Using PostgreSQL session store');
-} else {
-  const MemStoreSession = MemoryStore(session);
-  sessionStore = new MemStoreSession({
-    checkPeriod: 86400000 // prune expired entries every 24h
-  });
-  log('Using MemoryStore session store');
-}
+// Configure session store - always use MemoryStore for this Replit app
+const MemStoreSession = MemoryStore(session);
+const sessionStore = new MemStoreSession({
+  checkPeriod: 86400000 // prune expired entries every 24h
+});
+log('Using MemoryStore session store');
 
 // Session middleware configuration with security improvements
 app.use(session({
