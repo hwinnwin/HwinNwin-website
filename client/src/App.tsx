@@ -22,7 +22,7 @@ import BlogPostPage from "@/pages/marketing/blog-post";
 import ContactPage from "@/pages/marketing/contact";
 import LegalPage from "@/pages/marketing/legal";
 import DynamicPage from "@/pages/dynamic-page";
-import AutoQuoterCaseStudy from "@/pages/auto-quoter-case-study";
+import ProjectsPage from "@/pages/projects";
 
 function Router() {
   return (
@@ -32,8 +32,8 @@ function Router() {
         <Redirect to="/hwin" />
       </Route>
       
-      {/* Auto Quoter Case Study Route */}
-      <Route path="/auto-quoter-case-study" component={AutoQuoterCaseStudy} />
+      {/* Projects Page */}
+      <Route path="/projects" component={ProjectsPage} />
       
       {/* Existing Automotive App Routes - moved to dedicated paths */}
       <Route path="/panel-quote" component={CustomerForm} />
