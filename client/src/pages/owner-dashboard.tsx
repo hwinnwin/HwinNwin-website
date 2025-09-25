@@ -362,9 +362,9 @@ export default function OwnerDashboard() {
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                      <TableCell>{getConfidenceBadge(quote.calculation.confidence)}</TableCell>
+                      <TableCell>{quote.calculation ? getConfidenceBadge(quote.calculation.confidence) : <Badge variant="outline">N/A</Badge>}</TableCell>
                       <TableCell className="font-semibold">
-                        {quote.status === 'new' ? '-' : `$${quote.calculation.totalIncGST.toFixed(2)}`}
+                        {quote.status === 'new' ? '-' : quote.calculation ? `$${quote.calculation.totalIncGST.toFixed(2)}` : 'N/A'}
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
