@@ -42,6 +42,7 @@ import {
   ExternalLink,
   Calendar
 } from "lucide-react";
+import PageBuilder from "@/components/page-builder/PageBuilder";
 
 type ContentEditorFormData = MarketingContent;
 
@@ -87,6 +88,8 @@ export default function ContentEditor() {
   const [activeTab, setActiveTab] = useState<string>("marketing");
   const [isCreatePageOpen, setIsCreatePageOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<Page | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [showPageBuilder, setShowPageBuilder] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isAuthenticated, showPinModal, onPinSuccess, onPinModalClose, handle401Error, shouldMakeApiCalls } = useOwnerAuth();
@@ -150,6 +153,93 @@ export default function ContentEditor() {
 
   const onSubmit = (data: ContentEditorFormData) => {
     updateContentMutation.mutate(data);
+  };
+
+  // Page creation mutation
+  const createPageMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', '/api/pages', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/pages'] });
+      setIsCreateDialogOpen(false);
+      toast({
+        title: "Page Created",
+        description: "Page has been created successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Creation Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Page update mutation
+  const updatePageMutation = useMutation({
+    mutationFn: ({ id, ...data }: any) => apiRequest('PATCH', `/api/pages/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/pages'] });
+      toast({
+        title: "Page Updated",
+        description: "Page has been saved successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Page deletion mutation
+  const deletePageMutation = useMutation({
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/pages/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/pages'] });
+      toast({
+        title: "Page Deleted",
+        description: "Page has been deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Deletion Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleCreatePage = () => {
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleEditPage = (page: Page) => {
+    setEditingPage(page);
+    setShowPageBuilder(true);
+  };
+
+  const handleSavePage = (pageData: any) => {
+    if (editingPage) {
+      updatePageMutation.mutate({
+        id: editingPage.id,
+        ...pageData
+      });
+    }
+  };
+
+  const handleClosePage = () => {
+    setEditingPage(null);
+    setShowPageBuilder(false);
+  };
+
+  const handleDeletePage = (page: Page) => {
+    if (confirm(`Are you sure you want to delete "${page.title}"? This action cannot be undone.`)) {
+      deletePageMutation.mutate(page.id);
+    }
   };
 
   const toggleSection = (section: string) => {
@@ -449,12 +539,24 @@ export default function ContentEditor() {
 
       {/* Pages Tab */}
       <TabsContent value="pages" className="space-y-6">
-        <PagesManagement 
-          pages={pages || []}
-          isLoading={pagesLoading}
-          error={pagesError}
-          onRefetch={refetchPages}
-        />
+        {showPageBuilder ? (
+          <PageBuilder
+            page={editingPage || undefined}
+            onSave={handleSavePage}
+            onClose={handleClosePage}
+            isLoading={updatePageMutation.isPending}
+          />
+        ) : (
+          <PagesManagement 
+            pages={pages || []}
+            isLoading={pagesLoading}
+            error={pagesError}
+            onRefetch={refetchPages}
+            onCreatePage={handleCreatePage}
+            onEditPage={handleEditPage}
+            onDeletePage={handleDeletePage}
+          />
+        )}
       </TabsContent>
 
     </Tabs>
@@ -476,9 +578,12 @@ interface PagesManagementProps {
   isLoading: boolean;
   error: any;
   onRefetch: () => void;
+  onCreatePage: () => void;
+  onEditPage: (page: Page) => void;
+  onDeletePage: (page: Page) => void;
 }
 
-function PagesManagement({ pages, isLoading, error, onRefetch }: PagesManagementProps) {
+function PagesManagement({ pages, isLoading, error, onRefetch, onCreatePage, onEditPage, onDeletePage }: PagesManagementProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<Page | null>(null);
   const { toast } = useToast();
@@ -551,7 +656,7 @@ function PagesManagement({ pages, isLoading, error, onRefetch }: PagesManagement
           <p className="text-muted-foreground">Create and manage custom pages for your website</p>
         </div>
         <Button 
-          onClick={() => setIsCreateDialogOpen(true)}
+          onClick={() => onCreatePage()}
           data-testid="button-create-page"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -582,7 +687,7 @@ function PagesManagement({ pages, isLoading, error, onRefetch }: PagesManagement
             <p className="text-muted-foreground text-center mb-6">
               Create your first custom page to get started
             </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Button onClick={() => onCreatePage()}>
               <Plus className="mr-2 h-4 w-4" />
               Create First Page
             </Button>
@@ -605,11 +710,11 @@ function PagesManagement({ pages, isLoading, error, onRefetch }: PagesManagement
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        Created {new Date(page.createdAt).toLocaleDateString()}
+                        Created {page.createdAt ? new Date(page.createdAt).toLocaleDateString() : 'Unknown'}
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        Updated {new Date(page.updatedAt).toLocaleDateString()}
+                        Updated {page.updatedAt ? new Date(page.updatedAt).toLocaleDateString() : 'Unknown'}
                       </div>
                     </div>
                   </div>
@@ -628,7 +733,7 @@ function PagesManagement({ pages, isLoading, error, onRefetch }: PagesManagement
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditingPage(page)}
+                      onClick={() => onEditPage(page)}
                       data-testid={`button-edit-${page.id}`}
                     >
                       <Edit3 className="h-4 w-4 mr-1" />
