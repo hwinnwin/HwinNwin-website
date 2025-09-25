@@ -99,7 +99,13 @@ export default function QuoteForm({ onSubmitted }: QuoteFormProps) {
         formData.append('photos', photo);
       });
 
-      console.log('FormData ready, sending request...');
+      console.log('FormData ready, sending to debug endpoint first...');
+      const debugResponse = await apiRequest('POST', '/api/debug/echo', formData);
+      const debugResult = await debugResponse.json();
+      console.log('Debug endpoint response:', debugResult);
+      
+      // Now send to actual quote endpoint
+      console.log('Sending to quote endpoint...');
       const response = await apiRequest('POST', '/api/quote', formData);
       return response.json();
     },
