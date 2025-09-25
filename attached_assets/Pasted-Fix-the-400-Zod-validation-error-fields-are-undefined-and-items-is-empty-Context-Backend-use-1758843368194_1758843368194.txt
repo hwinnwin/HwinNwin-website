@@ -1,0 +1,71 @@
+Fix the 400 Zod validation error: fields are undefined and items[] is empty.
+
+Context:
+- Backend uses Zod to require these fields: customerName, customerPhone, customerEmail, vehicleRego, vehicleMake, vehicleModel, vehicleYear, vehiclePaint ('solid'|'metallic'|'pearlescent'), and items (non-empty array).
+- Error shows "expected string, received undefined" for all the above and "Array must contain at least 1 element(s)" for items.
+
+Tasks (do all; keep existing features):
+
+BACKEND
+1) Ensure JSON/body parsing is enabled *before* routes:
+   app.use(express.json());
+   app.use(express.urlencoded({ extended: true }));
+   // If uploads use multipart + multer, make sure text fields are read from req.body and files from req.files.
+
+2) Confirm the create-quote route reads the exact field names that Zod expects:
+   const {
+     customerName, customerPhone, customerEmail,
+     vehicleRego, vehicleMake, vehicleModel, vehicleYear, vehiclePaint,
+     items
+   } = req.body;
+
+3) If the frontend sends FormData, add logic to normalize string fields and parse items from JSON:
+   // e.g. items may arrive as a JSON string: JSON.parse(req.body.items)
+
+4) Harden schema adapters:
+   - Coerce numerics/trim strings where safe (e.g., year as string, .trim()).
+   - Validate vehiclePaint against the enum; if missing, return 400 with helpful message.
+   - Confirm Zod uses .nonempty() for items. (Zod nonempty arrays throw if empty.)
+
+5) Return structured errors the client can show (status 422). Do not crash.
+
+FRONTEND
+6) On submit, send the body with EXACT keys the API expects.
+   If using fetch with JSON:
+     fetch('/api/quote', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({
+         customerName, customerPhone, customerEmail,
+         vehicleRego, vehicleMake, vehicleModel, vehicleYear, vehiclePaint,
+         items // array of { panel, severity, partsCost, blend }
+       })
+     })
+   If using FormData (because of images), then:
+     const fd = new FormData();
+     fd.append('customerName', customerName);
+     fd.append('customerPhone', customerPhone);
+     fd.append('customerEmail', customerEmail);
+     fd.append('vehicleRego', vehicleRego);
+     fd.append('vehicleMake', vehicleMake);
+     fd.append('vehicleModel', vehicleModel);
+     fd.append('vehicleYear', vehicleYear); // as string
+     fd.append('vehiclePaint', vehiclePaint); // 'solid'|'metallic'|'pearlescent'
+     fd.append('items', JSON.stringify(items));
+     // Append photos as fd.append('photos', file) per file
+     fetch('/api/quote', { method: 'POST', body: fd });
+
+7) Bind all form inputs to state and ensure they’re non-empty before send. Prevent submit if items.length === 0.
+
+8) Verify field name alignment end-to-end:
+   - INPUT name/id ↔ state variable ↔ request body key ↔ Zod schema path.
+
+TEST
+9) Add a temporary /api/debug/echo route to log req.headers and req.body for one request to confirm the server actually receives the populated fields.
+
+ACCEPTANCE
+- Submitting the form sends a body with all required keys populated and items has ≥1 element.
+- Server no longer returns Zod "expected string, received undefined" or "Array must contain at least 1 element(s)".
+- If any field is omitted, server responds 422 with a readable error map and the UI surfaces per-field messages.
+
+Do not remove existing features. Only implement the above fixes and alignments.
