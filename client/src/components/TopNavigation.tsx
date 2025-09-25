@@ -28,7 +28,7 @@ export default function TopNavigation() {
           {/* Logo/Brand */}
           <Link href="/" className="flex items-center space-x-3" data-testid="brand-link">
             <span className="text-xl font-bold tracking-tight text-foreground">
-              Navigation
+              HwinNwin
             </span>
           </Link>
 
