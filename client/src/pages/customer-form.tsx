@@ -1,16 +1,12 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import QuoteForm from "@/components/quote-form";
-import PinModal from "@/components/pin-modal";
 import { CheckCircle, Clock, Phone, Mail, MapPin, AlertCircle } from "lucide-react";
 
 export default function CustomerForm() {
-  const [location, navigate] = useLocation();
-  const [showPinModal, setShowPinModal] = useState(false);
   const [submissionState, setSubmissionState] = useState<{
     isSubmitted: boolean;
     quoteId?: string;
@@ -25,14 +21,6 @@ export default function CustomerForm() {
     });
   };
 
-  const handleOwnerLogin = () => {
-    setShowPinModal(true);
-  };
-
-  const handlePinSuccess = () => {
-    setShowPinModal(false);
-    navigate("/owner");
-  };
 
   if (submissionState.isSubmitted) {
     return (
@@ -52,10 +40,6 @@ export default function CustomerForm() {
               </div>
               <div className="flex items-center space-x-4">
                 <span className="hidden sm:inline text-sm text-muted-foreground">Need help? Call: (03) 9123 4567</span>
-                <Button variant="secondary" onClick={handleOwnerLogin} data-testid="button-owner-login">
-                  <i className="fas fa-user-shield mr-1"></i>
-                  Owner Login
-                </Button>
               </div>
             </div>
           </div>
@@ -110,11 +94,6 @@ export default function CustomerForm() {
           </Card>
         </section>
 
-        <PinModal 
-          isOpen={showPinModal} 
-          onClose={() => setShowPinModal(false)} 
-          onSuccess={handlePinSuccess} 
-        />
       </div>
     );
   }
@@ -136,10 +115,6 @@ export default function CustomerForm() {
             </div>
             <div className="flex items-center space-x-4">
               <span className="hidden sm:inline text-sm text-muted-foreground">Need help? Call: (03) 9123 4567</span>
-              <Button variant="secondary" onClick={handleOwnerLogin} data-testid="button-owner-login">
-                <i className="fas fa-user-shield mr-1"></i>
-                Owner Login
-              </Button>
             </div>
           </div>
         </div>
@@ -171,11 +146,6 @@ export default function CustomerForm() {
         </div>
       </footer>
 
-      <PinModal 
-        isOpen={showPinModal} 
-        onClose={() => setShowPinModal(false)} 
-        onSuccess={handlePinSuccess} 
-      />
     </div>
   );
 }

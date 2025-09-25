@@ -72,7 +72,7 @@ export default function PinModal({ isOpen, onClose, onSuccess }: PinModalProps) 
     setMaskedEmail("");
     toast({
       title: "Access Granted",
-      description: "Welcome to the owner dashboard",
+      description: "Welcome back",
     });
     onSuccess();
   };
@@ -127,11 +127,11 @@ export default function PinModal({ isOpen, onClose, onSuccess }: PinModalProps) 
               )}
             </div>
             <DialogTitle className="text-xl font-semibold">
-              {step === 'pin' ? 'Owner Access' : 'Email Verification'}
+              {step === 'pin' ? 'Secure Access' : 'Email Verification'}
             </DialogTitle>
             <p className="text-muted-foreground mt-2">
               {step === 'pin' 
-                ? 'Enter your PIN to access the dashboard' 
+                ? 'Enter your PIN to continue' 
                 : `Enter the 6-digit code sent to ${maskedEmail}`
               }
             </p>
@@ -262,7 +262,7 @@ export default function PinModal({ isOpen, onClose, onSuccess }: PinModalProps) 
         <div className="text-center mt-4">
           <p className="text-xs text-muted-foreground">
             {step === 'pin' 
-              ? 'Forgot your PIN? Contact system administrator.'
+              ? 'Need help? Contact support.'
               : 'Code expires in 5 minutes. Check your spam folder if not received.'
             }
           </p>
