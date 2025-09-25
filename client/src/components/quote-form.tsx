@@ -72,8 +72,6 @@ export default function QuoteForm({ onSubmitted }: QuoteFormProps) {
 
   const submitMutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
-      console.log('Mutation data received:', data);
-      
       // Validate that we have required data
       if (!data.customerFirstName || !data.customerLastName || !data.customerEmail) {
         throw new Error('Required form fields are missing');
@@ -87,7 +85,6 @@ export default function QuoteForm({ onSubmitted }: QuoteFormProps) {
       
       // Add form fields
       Object.entries(data).forEach(([key, value]) => {
-        console.log(`Adding to FormData: ${key} = ${value}`);
         if (key === 'items') {
           formData.append(key, JSON.stringify(value));
         } else {
@@ -96,12 +93,10 @@ export default function QuoteForm({ onSubmitted }: QuoteFormProps) {
       });
 
       // Add photos
-      photos.forEach((photo, index) => {
-        console.log(`Adding photo ${index}:`, photo.name);
+      photos.forEach(photo => {
         formData.append('photos', photo);
       });
 
-      console.log('FormData ready, sending request...');
       const response = await apiRequest('POST', '/api/quote', formData);
       return response.json();
     },
@@ -125,15 +120,8 @@ export default function QuoteForm({ onSubmitted }: QuoteFormProps) {
   });
 
   const onSubmit = (data: CustomerFormData) => {
-    // Debug form data
-    console.log('Form data:', data);
-    console.log('Damage items:', damageItems);
-    console.log('Photos:', photos);
-    
     // Update items in form data
     const updatedData = { ...data, items: damageItems };
-    console.log('Updated data to submit:', updatedData);
-    
     submitMutation.mutate(updatedData);
   };
 
