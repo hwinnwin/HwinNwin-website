@@ -11,7 +11,7 @@ interface EmailParams {
 
 export class EmailService {
   private apiKey: string | null = null;
-  private fromEmail: string = "quotes@leemurdokpanels.com.au";
+  private fromEmail: string = "quotes@panelrepair.com";
 
   constructor(settings?: Settings) {
     if (settings?.sendgridApiKey) {
@@ -64,12 +64,12 @@ export class EmailService {
     customerName: string, 
     quoteId: string
   ): Promise<{ success: boolean; error?: string }> {
-    const subject = "Quote Request Received - Lee Murdok Panels";
+    const subject = "Quote Request Received - Auto Panel Repair";
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #1E40AF; color: white; padding: 20px; text-align: center;">
-          <h1>Lee Murdok Panels</h1>
+          <h1>Auto Panel Repair</h1>
           <p>Professional Auto Damage Assessment</p>
         </div>
         
@@ -92,18 +92,18 @@ export class EmailService {
           
           <ul>
             <li>Phone: (03) 9123 4567</li>
-            <li>Email: quotes@leemurdokpanels.com.au</li>
+            <li>Email: quotes@panelrepair.com</li>
           </ul>
           
-          <p>Thank you for choosing Lee Murdok Panels for your automotive repair needs.</p>
+          <p>Thank you for choosing Auto Panel Repair for your automotive repair needs.</p>
           
           <p>Best regards,<br>
-          The Lee Murdok Panels Team</p>
+          The Auto Panel Repair Team</p>
         </div>
         
         <div style="background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666;">
           <p>This is an automated message. Please do not reply to this email.</p>
-          <p>&copy; 2024 Lee Murdok Panels. All rights reserved.</p>
+          <p>&copy; 2024 Auto Panel Repair. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -121,10 +121,10 @@ Expected Response: Within 24 hours
 
 You will receive another email with your detailed quote once our specialists have completed their assessment and the owner has approved the pricing.
 
-If you have any questions, please contact us at (03) 9123 4567 or quotes@leemurdokpanels.com.au.
+If you have any questions, please contact us at (03) 9123 4567 or quotes@panelrepair.com.
 
 Best regards,
-The Lee Murdok Panels Team
+The Auto Panel Repair Team
     `;
 
     return this.sendEmail({
@@ -218,12 +218,12 @@ The HwinNwin Security Team
     pdfUrl: string,
     totalAmount: number
   ): Promise<{ success: boolean; error?: string }> {
-    const subject = "Your Vehicle Damage Quote is Ready - Lee Murdok Panels";
+    const subject = "Your Vehicle Damage Quote is Ready - Auto Panel Repair";
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #1E40AF; color: white; padding: 20px; text-align: center;">
-          <h1>Lee Murdok Panels</h1>
+          <h1>Auto Panel Repair</h1>
           <p>Professional Auto Damage Assessment</p>
         </div>
         
@@ -251,17 +251,17 @@ The HwinNwin Security Team
           <p>Ready to proceed? Contact us to schedule your repair:</p>
           <ul>
             <li>Phone: (03) 9123 4567</li>
-            <li>Email: quotes@leemurdokpanels.com.au</li>
+            <li>Email: quotes@panelrepair.com</li>
           </ul>
           
-          <p>Thank you for choosing Lee Murdok Panels!</p>
+          <p>Thank you for choosing Auto Panel Repair!</p>
           
           <p>Best regards,<br>
-          The Lee Murdok Panels Team</p>
+          The Auto Panel Repair Team</p>
         </div>
         
         <div style="background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666;">
-          <p>&copy; 2024 Lee Murdok Panels. All rights reserved.</p>
+          <p>&copy; 2024 Auto Panel Repair. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -280,10 +280,10 @@ Download PDF: ${pdfUrl}
 
 Important: This is a provisional estimate based on the photos provided. Final pricing may change after physical vehicle inspection.
 
-Ready to proceed? Contact us at (03) 9123 4567 or quotes@leemurdokpanels.com.au.
+Ready to proceed? Contact us at (03) 9123 4567 or quotes@panelrepair.com.
 
 Best regards,
-The Lee Murdok Panels Team
+The Auto Panel Repair Team
     `;
 
     return this.sendEmail({
