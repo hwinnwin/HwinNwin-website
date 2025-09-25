@@ -9,9 +9,10 @@ import { PDFService } from "./services/pdfService";
 import { ImageService } from "./services/imageService";
 import { calculateQuote, validatePhotos } from "./services/quoteCalculator";
 import { quoteRateLimiter, generalRateLimiter, pinChangeRateLimiter } from "./middleware/rateLimiter";
-import { requireOwnerPin, createOwnerSession, requireOwnerSession } from "./middleware/ownerAuth";
-import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema, contactFormSchema, marketingContentSchema } from "@shared/schema";
+import { requireOwnerPin, createOwnerSession, requireOwnerSession, requirePending2FA } from "./middleware/ownerAuth";
+import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema, contactFormSchema, marketingContentSchema, loginSchema, otpVerificationSchema, twoFaSettingsSchema } from "@shared/schema";
 import { hashPin, comparePin, isPinHashed } from "./services/pinService";
+import { generateOTPRecord, verifyOTP, isOTPExpired, clearOTPData, isValidOTPFormat } from "./services/otpService";
 import { z } from "zod";
 import fs from "fs/promises";
 import matter from "gray-matter";
@@ -1020,10 +1021,19 @@ Melbourne, Australia
     }
   });
 
-  // Owner authentication
-  app.post('/api/owner/login', async (req, res) => {
+  // Owner authentication with 2FA support
+  app.post('/api/owner/login', generalRateLimiter.middleware(), async (req, res) => {
     try {
-      const { pin } = req.body;
+      // Validate request body
+      const validationResult = loginSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: "Invalid request",
+          errors: validationResult.error.errors
+        });
+      }
+
+      const { pin } = validationResult.data;
       const settings = await storage.getSettings();
       
       // Use constant-time comparison to prevent timing attacks
@@ -1031,8 +1041,13 @@ Melbourne, Australia
         ? await comparePin(pin, settings.ownerPin)
         : pin === settings.ownerPin;
         
-      if (isValidPin) {
-        // Regenerate session ID to prevent session fixation attacks
+      if (!isValidPin) {
+        return res.status(401).json({ message: "Invalid PIN" });
+      }
+
+      // PIN is valid - check if 2FA is enabled
+      if (!settings.twoFaEnabled) {
+        // 2FA disabled - complete login immediately (backwards compatibility)
         if (req.session) {
           req.session.regenerate((err) => {
             if (err) {
@@ -1040,28 +1055,240 @@ Melbourne, Australia
               return res.status(500).json({ message: "Authentication error" });
             }
             
-            // Set the isOwner flag on the new session
             req.session.isOwner = true;
+            req.session.pending2FA = false;
             
-            // Save the session
             req.session.save((saveErr) => {
               if (saveErr) {
                 console.error('Session save error:', saveErr);
                 return res.status(500).json({ message: "Authentication error" });
               }
               
-              res.json({ message: "Authentication successful" });
+              res.json({ 
+                message: "Authentication successful",
+                requiresOTP: false 
+              });
             });
           });
         } else {
           res.status(500).json({ message: "Session not available" });
         }
-      } else {
-        res.status(401).json({ message: "Invalid PIN" });
+        return;
       }
+
+      // 2FA is enabled - generate and send OTP
+      if (!settings.twoFaEmail) {
+        return res.status(400).json({ 
+          message: "2FA is enabled but no email address is configured. Please contact administrator." 
+        });
+      }
+
+      const emailService = new EmailService(settings);
+      if (!emailService.isConfigured()) {
+        return res.status(500).json({ 
+          message: "Email service not configured. Please contact administrator." 
+        });
+      }
+
+      // Generate OTP
+      const otpData = await generateOTPRecord();
+      
+      // Store OTP in settings (hashed)
+      await storage.updateSettings({
+        otpSecret: otpData.hashedOtp,
+        otpExpiresAt: otpData.expiresAt
+      });
+
+      // Send OTP email
+      const emailResult = await emailService.sendOTPCode(
+        settings.twoFaEmail,
+        otpData.otp
+      );
+
+      if (!emailResult.success) {
+        // Clear OTP data on email failure
+        await storage.updateSettings(clearOTPData());
+        return res.status(500).json({ 
+          message: "Failed to send verification code. Please try again." 
+        });
+      }
+
+      // Set pending 2FA session
+      if (req.session) {
+        req.session.regenerate((err) => {
+          if (err) {
+            console.error('Session regeneration error:', err);
+            return res.status(500).json({ message: "Authentication error" });
+          }
+          
+          req.session.isOwner = false;
+          req.session.pending2FA = true;
+          
+          req.session.save((saveErr) => {
+            if (saveErr) {
+              console.error('Session save error:', saveErr);
+              return res.status(500).json({ message: "Authentication error" });
+            }
+            
+            res.json({ 
+              message: "Verification code sent to your email",
+              requiresOTP: true,
+              email: settings.twoFaEmail!.replace(/(.{2}).*@/, "$1***@") // Mask email for security
+            });
+          });
+        });
+      } else {
+        res.status(500).json({ message: "Session not available" });
+      }
+
     } catch (error) {
       console.error('Owner login error:', error);
       res.status(500).json({ message: "Authentication error" });
+    }
+  });
+
+  // OTP verification endpoint
+  app.post('/api/owner/verify-otp', generalRateLimiter.middleware(), requirePending2FA, async (req, res) => {
+    try {
+      // Validate request body
+      const validationResult = otpVerificationSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: "Invalid OTP format",
+          errors: validationResult.error.errors
+        });
+      }
+
+      const { otp } = validationResult.data;
+      const settings = await storage.getSettings();
+
+      // Check if OTP exists and hasn't expired
+      if (!settings.otpSecret || !settings.otpExpiresAt) {
+        return res.status(400).json({ 
+          message: "No pending OTP verification. Please start the login process again." 
+        });
+      }
+
+      if (isOTPExpired(settings.otpExpiresAt)) {
+        // Clear expired OTP
+        await storage.updateSettings(clearOTPData());
+        return res.status(400).json({ 
+          message: "OTP has expired. Please start the login process again." 
+        });
+      }
+
+      // Verify OTP
+      const isValidOTP = await verifyOTP(otp, settings.otpSecret);
+      
+      if (!isValidOTP) {
+        return res.status(401).json({ message: "Invalid verification code" });
+      }
+
+      // OTP is valid - complete authentication
+      // Clear OTP data first (single use)
+      await storage.updateSettings(clearOTPData());
+
+      if (req.session) {
+        req.session.isOwner = true;
+        req.session.pending2FA = false;
+        
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error('Session save error:', saveErr);
+            return res.status(500).json({ message: "Authentication error" });
+          }
+          
+          res.json({ 
+            message: "Authentication successful"
+          });
+        });
+      } else {
+        res.status(500).json({ message: "Session not available" });
+      }
+
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      res.status(500).json({ message: "Verification error" });
+    }
+  });
+
+  // 2FA Settings endpoints
+  app.get('/api/owner/2fa-settings', requireOwnerSession, async (req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      
+      res.json({
+        twoFaEnabled: settings.twoFaEnabled,
+        twoFaEmail: settings.twoFaEmail || "",
+        hasEmailService: !!(settings.sendgridApiKey && settings.fromEmail)
+      });
+    } catch (error) {
+      console.error('2FA settings get error:', error);
+      res.status(500).json({ message: "Failed to get 2FA settings" });
+    }
+  });
+
+  app.patch('/api/owner/2fa-settings', requireOwnerSession, generalRateLimiter.middleware(), async (req, res) => {
+    try {
+      // Validate request body
+      const validationResult = twoFaSettingsSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: "Invalid 2FA settings",
+          errors: validationResult.error.errors
+        });
+      }
+
+      const { twoFaEnabled, twoFaEmail } = validationResult.data;
+      const settings = await storage.getSettings();
+
+      // Check if email service is properly configured when enabling 2FA
+      if (twoFaEnabled) {
+        if (!settings.sendgridApiKey) {
+          return res.status(400).json({ 
+            message: "SendGrid API key must be configured before enabling 2FA. Please add your SendGrid API key in settings." 
+          });
+        }
+        
+        if (!settings.fromEmail) {
+          return res.status(400).json({ 
+            message: "From email address must be configured before enabling 2FA. Please set a from email in settings." 
+          });
+        }
+
+        // Verify email service is working by testing configuration
+        try {
+          const emailService = new EmailService(settings);
+          if (!emailService.isConfigured()) {
+            return res.status(400).json({ 
+              message: "Email service configuration is invalid. Please check your SendGrid API key." 
+            });
+          }
+        } catch (error) {
+          console.error('Email service validation error:', error);
+          return res.status(400).json({ 
+            message: "Email service validation failed. Please verify your SendGrid configuration." 
+          });
+        }
+      }
+
+      // Update 2FA settings
+      await storage.updateSettings({
+        twoFaEnabled,
+        twoFaEmail: twoFaEmail || null,
+        // Clear any existing OTP data when changing settings
+        ...clearOTPData()
+      });
+
+      res.json({ 
+        message: `2FA ${twoFaEnabled ? 'enabled' : 'disabled'} successfully`,
+        twoFaEnabled,
+        twoFaEmail: twoFaEmail || ""
+      });
+
+    } catch (error) {
+      console.error('2FA settings update error:', error);
+      res.status(500).json({ message: "Failed to update 2FA settings" });
     }
   });
 

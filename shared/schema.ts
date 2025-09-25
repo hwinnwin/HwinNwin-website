@@ -18,6 +18,11 @@ export const settings = sqliteTable("settings", {
   sendgridApiKey: text("sendgrid_api_key"),
   fromEmail: text("from_email").default("quotes@leemurdokpanels.com.au"),
   siteUrl: text("site_url").default("https://lee888.com.au"),
+  // Two-Factor Authentication fields
+  twoFaEnabled: integer("two_fa_enabled", { mode: "boolean" }).notNull().default(false),
+  twoFaEmail: text("two_fa_email"),
+  otpSecret: text("otp_secret"), // Temporary storage for hashed OTP
+  otpExpiresAt: text("otp_expires_at"), // ISO timestamp for OTP expiry
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`)
 });
@@ -102,27 +107,25 @@ export const insertSettingsSchema = createInsertSchema(settings).omit({
   updatedAt: true
 });
 
-// PIN validation schema with strong security requirements
+// PIN validation schema - 4-6 digit numeric for compatibility with frontend
 export const pinValidationSchema = z.object({
   pin: z.string()
-    .min(8, "PIN must be at least 8 characters long")
-    .max(20, "PIN must be no more than 20 characters long")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/, 
-           "PIN must contain at least one lowercase letter, one uppercase letter, one number, and one special character")
-    .refine(pin => pin !== "123456" && pin !== "password" && pin !== "12345678", 
-           "PIN cannot be a common weak password")
+    .min(4, "PIN must be at least 4 digits")
+    .max(6, "PIN must be no more than 6 digits")
+    .regex(/^\d{4,6}$/, "PIN must contain only numbers (4-6 digits)")
+    .refine(pin => pin !== "0000" && pin !== "1234" && pin !== "0123", 
+           "PIN cannot be a simple sequence")
 });
 
 // PIN change schema with current PIN verification
 export const pinChangeSchema = z.object({
   currentPin: z.string().min(1, "Current PIN is required"),
   newPin: z.string()
-    .min(8, "New PIN must be at least 8 characters long")
-    .max(20, "New PIN must be no more than 20 characters long")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/, 
-           "New PIN must contain at least one lowercase letter, one uppercase letter, one number, and one special character")
-    .refine(pin => pin !== "123456" && pin !== "password" && pin !== "12345678", 
-           "New PIN cannot be a common weak password"),
+    .min(4, "New PIN must be at least 4 digits")
+    .max(6, "New PIN must be no more than 6 digits")
+    .regex(/^\d{4,6}$/, "New PIN must contain only numbers (4-6 digits)")
+    .refine(pin => pin !== "0000" && pin !== "1234" && pin !== "0123", 
+           "New PIN cannot be a simple sequence"),
   confirmPin: z.string()
 }).refine(data => data.newPin === data.confirmPin, {
   message: "PIN confirmation does not match",
@@ -135,16 +138,40 @@ export const pinChangeSchema = z.object({
 // First-time PIN change schema (for fresh installations)
 export const firstTimePinChangeSchema = z.object({
   newPin: z.string()
-    .min(8, "New PIN must be at least 8 characters long")
-    .max(20, "New PIN must be no more than 20 characters long")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/, 
-           "New PIN must contain at least one lowercase letter, one uppercase letter, one number, and one special character")
-    .refine(pin => pin !== "123456" && pin !== "password" && pin !== "12345678", 
-           "New PIN cannot be a common weak password"),
+    .min(4, "New PIN must be at least 4 digits")
+    .max(6, "New PIN must be no more than 6 digits")
+    .regex(/^\d{4,6}$/, "New PIN must contain only numbers (4-6 digits)")
+    .refine(pin => pin !== "0000" && pin !== "1234" && pin !== "0123", 
+           "New PIN cannot be a simple sequence"),
   confirmPin: z.string()
 }).refine(data => data.newPin === data.confirmPin, {
   message: "PIN confirmation does not match",
   path: ["confirmPin"]
+});
+
+// Two-Factor Authentication schemas
+export const twoFaSettingsSchema = z.object({
+  twoFaEnabled: z.boolean(),
+  twoFaEmail: z.string().email("Please enter a valid email address").optional().or(z.literal(""))
+}).refine(data => {
+  // If 2FA is enabled, email must be provided
+  if (data.twoFaEnabled && (!data.twoFaEmail || data.twoFaEmail === "")) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Email address is required when enabling 2FA",
+  path: ["twoFaEmail"]
+});
+
+export const otpVerificationSchema = z.object({
+  otp: z.string()
+    .length(6, "OTP must be exactly 6 digits")
+    .regex(/^\d{6}$/, "OTP must contain only numbers")
+});
+
+export const loginSchema = z.object({
+  pin: z.string().min(1, "PIN is required")
 });
 
 export const insertTestimonialSchema = createInsertSchema(testimonials).omit({
@@ -192,6 +219,9 @@ export type QuoteCalculation = z.infer<typeof quoteCalculationSchema>;
 export type PinValidation = z.infer<typeof pinValidationSchema>;
 export type PinChange = z.infer<typeof pinChangeSchema>;
 export type FirstTimePinChange = z.infer<typeof firstTimePinChangeSchema>;
+export type TwoFaSettings = z.infer<typeof twoFaSettingsSchema>;
+export type OtpVerification = z.infer<typeof otpVerificationSchema>;
+export type Login = z.infer<typeof loginSchema>;
 
 // Contact form schema for marketing site
 export const contactFormSchema = z.object({
