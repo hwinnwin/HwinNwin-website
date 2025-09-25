@@ -102,6 +102,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const imageService = new ImageService();
   const upload = imageService.createMulterUpload();
 
+  // Health check endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({ ok: true, timestamp: new Date().toISOString() });
+  });
+
   // Serve uploaded images
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
