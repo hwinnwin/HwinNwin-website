@@ -116,7 +116,7 @@ export default function CustomerForm() {
                 <i className="fas fa-car text-primary-foreground text-lg"></i>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Lee Murdok Panels</h1>
+                <h1 className="text-xl font-bold text-foreground">Auto Panel Repair</h1>
                 <p className="text-xs text-muted-foreground">Professional Auto Damage Assessment</p>
               </div>
             </div>
@@ -138,16 +138,16 @@ export default function CustomerForm() {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mr-2">
                 <i className="fas fa-car text-primary-foreground"></i>
               </div>
-              <span className="font-semibold text-foreground">Lee Murdok Panels</span>
+              <span className="font-semibold text-foreground">Auto Panel Repair</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4">Professional automotive damage assessment and repair services</p>
             <div className="flex justify-center space-x-6 text-sm text-muted-foreground">
               <span className="flex items-center"><Phone className="mr-1" size={16} />(03) 9123 4567</span>
-              <span className="flex items-center"><Mail className="mr-1" size={16} />info@leemurdokpanels.com.au</span>
+              <span className="flex items-center"><Mail className="mr-1" size={16} />quotes@panelrepair.com</span>
               <span className="flex items-center"><MapPin className="mr-1" size={16} />Melbourne, VIC</span>
             </div>
             <div className="mt-4 text-xs text-muted-foreground">
-              <p>&copy; 2024 Lee Murdok Panels. All rights reserved. | Licensed Motor Vehicle Trader</p>
+              <p>&copy; 2024 Auto Panel Repair. All rights reserved. | Licensed Motor Vehicle Trader</p>
             </div>
           </div>
         </div>
