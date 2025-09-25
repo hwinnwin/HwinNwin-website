@@ -107,6 +107,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ ok: true, timestamp: new Date().toISOString() });
   });
 
+  // General file upload endpoint
+  app.post('/api/upload', upload.single('image'), async (req, res) => {
+    try {
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({ 
+          message: "No file uploaded. Please select an image file." 
+        });
+      }
+
+      // Validate the uploaded image
+      const validation = await imageService.validateImage(file.path);
+      
+      if (!validation.isValid) {
+        // Clean up the invalid file
+        await imageService.deleteImage(file.filename);
+        return res.status(400).json({
+          message: "Invalid image file",
+          errors: validation.errors
+        });
+      }
+
+      // Get image dimensions and metadata
+      let width = 0;
+      let height = 0;
+      
+      try {
+        const sharp = await import('sharp');
+        const metadata = await sharp.default(file.path).metadata();
+        width = metadata.width || 0;
+        height = metadata.height || 0;
+      } catch (error) {
+        console.warn('Could not get image dimensions:', error);
+        // Continue without dimensions
+      }
+
+      // Generate the public URL for the uploaded image
+      const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+      const imageUrl = `${baseUrl}/uploads/${file.filename}`;
+
+      // Return the image metadata
+      res.json({
+        url: imageUrl,
+        width,
+        height,
+        mime: file.mimetype,
+        bytes: file.size,
+        filename: file.filename
+      });
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      
+      // Clean up file if it exists
+      if (req.file) {
+        await imageService.deleteImage(req.file.filename);
+      }
+      
+      res.status(500).json({ 
+        message: "Upload failed. Please try again." 
+      });
+    }
+  });
+
   // Serve uploaded images
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
