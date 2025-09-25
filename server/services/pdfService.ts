@@ -175,7 +175,7 @@ export class PDFService {
 </head>
 <body>
     <div class="header">
-        <div class="logo">Lee Murdok Panels</div>
+        <div class="logo">Auto Panel Repair</div>
         <div class="tagline">Professional Auto Damage Assessment</div>
     </div>
 
@@ -265,7 +265,7 @@ export class PDFService {
     </div>
 
     <div style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">
-        <p>&copy; 2024 Lee Murdok Panels. All rights reserved. | Licensed Motor Vehicle Trader</p>
+        <p>&copy; 2024 Auto Panel Repair. All rights reserved. | Licensed Motor Vehicle Trader</p>
         <p>Generated on ${new Date().toLocaleDateString('en-AU')} at ${new Date().toLocaleTimeString('en-AU')}</p>
     </div>
 </body>
