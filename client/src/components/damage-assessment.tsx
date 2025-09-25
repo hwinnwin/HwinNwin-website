@@ -66,7 +66,7 @@ export default function DamageAssessment({ items, onItemsChange }: DamageAssessm
               )}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium text-foreground mb-2">Panel/Area *</Label>
                 <Select 
@@ -101,19 +101,6 @@ export default function DamageAssessment({ items, onItemsChange }: DamageAssessm
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-foreground mb-2">Parts Cost (AUD $)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.partsCost}
-                  onChange={(e) => updateItem(index, { partsCost: parseFloat(e.target.value) || 0 })}
-                  placeholder="0.00"
-                  data-testid={`input-parts-cost-${index}`}
-                />
               </div>
             </div>
             
