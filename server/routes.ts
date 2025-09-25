@@ -10,7 +10,7 @@ import { ImageService } from "./services/imageService";
 import { calculateQuote, validatePhotos } from "./services/quoteCalculator";
 import { quoteRateLimiter, generalRateLimiter, pinChangeRateLimiter } from "./middleware/rateLimiter";
 import { requireOwnerPin, createOwnerSession, requireOwnerSession, requirePending2FA } from "./middleware/ownerAuth";
-import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema, contactFormSchema, marketingContentSchema, loginSchema, otpVerificationSchema, twoFaSettingsSchema } from "@shared/schema";
+import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema, contactFormSchema, marketingContentSchema, loginSchema, otpVerificationSchema, twoFaSettingsSchema, insertPageSchema, pageContentSchema } from "@shared/schema";
 import { hashPin, comparePin, isPinHashed } from "./services/pinService";
 import { generateOTPRecord, verifyOTP, isOTPExpired, clearOTPData, isValidOTPFormat } from "./services/otpService";
 import { z } from "zod";
@@ -1595,6 +1595,121 @@ Melbourne, Australia
     } catch (error) {
       console.error('Get testimonials error:', error);
       res.status(500).json({ message: "Failed to get testimonials" });
+    }
+  });
+
+  // Page API Endpoints
+  // GET /api/pages - List all pages (published and drafts for owner)
+  app.get('/api/pages', requireOwnerSession, async (req, res) => {
+    try {
+      const pages = await storage.getAllPages(false); // Include all pages for owner
+      res.json(pages);
+    } catch (error) {
+      console.error('Pages fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch pages' });
+    }
+  });
+
+  // POST /api/pages - Create new page (owner only)
+  app.post('/api/pages', requireOwnerSession, async (req, res) => {
+    try {
+      const validatedData = insertPageSchema.parse(req.body);
+      
+      // Validate JSON content structure
+      try {
+        const parsedContent = JSON.parse(validatedData.content);
+        pageContentSchema.parse(parsedContent);
+      } catch (contentError) {
+        return res.status(400).json({ 
+          error: 'Invalid page content structure',
+          details: contentError instanceof Error ? contentError.message : 'Content validation failed'
+        });
+      }
+
+      const page = await storage.createPage(validatedData);
+      res.status(201).json(page);
+    } catch (error) {
+      console.error('Page creation error:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: 'Validation failed', details: error.errors });
+      } else {
+        res.status(500).json({ error: 'Failed to create page' });
+      }
+    }
+  });
+
+  // GET /api/pages/:slug - Get page by slug (public for published, owner for drafts)
+  app.get('/api/pages/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const page = await storage.getPageBySlug(slug);
+      
+      if (!page) {
+        return res.status(404).json({ error: 'Page not found' });
+      }
+
+      // Check if user can access draft pages
+      if (page.status === 'draft') {
+        // Only authenticated owners can see draft pages
+        const isOwner = req.session?.isOwner;
+        if (!isOwner) {
+          return res.status(404).json({ error: 'Page not found' });
+        }
+      }
+
+      res.json(page);
+    } catch (error) {
+      console.error('Page fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch page' });
+    }
+  });
+
+  // PATCH /api/pages/:id - Update page (owner only)
+  app.patch('/api/pages/:id', requireOwnerSession, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+
+      // Validate content if it's being updated
+      if (updates.content) {
+        try {
+          const parsedContent = JSON.parse(updates.content);
+          pageContentSchema.parse(parsedContent);
+        } catch (contentError) {
+          return res.status(400).json({ 
+            error: 'Invalid page content structure',
+            details: contentError instanceof Error ? contentError.message : 'Content validation failed'
+          });
+        }
+      }
+
+      const updatedPage = await storage.updatePage(id, updates);
+      
+      if (!updatedPage) {
+        return res.status(404).json({ error: 'Page not found' });
+      }
+
+      res.json(updatedPage);
+    } catch (error) {
+      console.error('Page update error:', error);
+      res.status(500).json({ error: 'Failed to update page' });
+    }
+  });
+
+  // DELETE /api/pages/:id - Delete page (owner only)
+  app.delete('/api/pages/:id', requireOwnerSession, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deletePage(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: 'Page not found' });
+      }
+
+      res.json({ success: true, message: 'Page deleted successfully' });
+    } catch (error) {
+      console.error('Page deletion error:', error);
+      res.status(500).json({ error: 'Failed to delete page' });
     }
   });
 

@@ -12,7 +12,9 @@ import type {
   InsertTestimonial,
   QuoteStatusHistory,
   DamageItem,
-  QuoteCalculation 
+  QuoteCalculation,
+  Page,
+  InsertPage
 } from "@shared/schema";
 
 export interface IStorage {
@@ -45,6 +47,14 @@ export interface IStorage {
     last7Days: number;
     conversionRate: number;
   }>;
+  
+  // Pages
+  createPage(page: InsertPage): Promise<Page>;
+  getPage(id: string): Promise<Page | undefined>;
+  getPageBySlug(slug: string): Promise<Page | undefined>;
+  getAllPages(includePublishedOnly?: boolean): Promise<Page[]>;
+  updatePage(id: string, updates: Partial<Page>): Promise<Page | undefined>;
+  deletePage(id: string): Promise<boolean>;
 }
 
 export class SqliteStorage implements IStorage {
@@ -124,10 +134,24 @@ export class SqliteStorage implements IStorage {
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS pages (
+        id TEXT PRIMARY KEY,
+        slug TEXT NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        status TEXT CHECK(status IN ('draft', 'published')) NOT NULL DEFAULT 'draft',
+        seo_title TEXT,
+        seo_description TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Indexes
       CREATE INDEX IF NOT EXISTS idx_quotes_status ON quotes(status);
       CREATE INDEX IF NOT EXISTS idx_quotes_slug ON quotes(customer_link_slug);
       CREATE INDEX IF NOT EXISTS idx_quote_history_quote_id ON quote_status_history(quote_id);
+      CREATE INDEX IF NOT EXISTS idx_pages_slug ON pages(slug);
+      CREATE INDEX IF NOT EXISTS idx_pages_status ON pages(status);
     `);
 
     // Handle settings initialization and migration
@@ -210,6 +234,32 @@ export class SqliteStorage implements IStorage {
       result += chars[Math.floor(Math.random() * chars.length)];
     }
     return result;
+  }
+
+  private generatePageSlug(title: string): string {
+    // Convert title to slug format
+    let slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+    
+    // Ensure slug is not empty
+    if (!slug) {
+      slug = 'page';
+    }
+    
+    // Check for uniqueness and add suffix if needed
+    let finalSlug = slug;
+    let counter = 1;
+    
+    while (this.db.prepare("SELECT id FROM pages WHERE slug = ?").get(finalSlug)) {
+      finalSlug = `${slug}-${counter}`;
+      counter++;
+    }
+    
+    return finalSlug;
   }
 
   async createQuote(insertQuote: InsertQuoteForStorage): Promise<Quote> {
@@ -492,6 +542,129 @@ export class SqliteStorage implements IStorage {
       last7Days: last7Days.count,
       conversionRate: Math.round(conversionRate * 100) / 100
     };
+  }
+
+  // Page CRUD operations
+  async createPage(insertPage: InsertPage): Promise<Page> {
+    const id = randomUUID();
+    const now = new Date().toISOString();
+    const slug = this.generatePageSlug(insertPage.title);
+
+    const page: Page = {
+      id,
+      slug,
+      title: insertPage.title,
+      content: insertPage.content,
+      status: insertPage.status || "draft",
+      seoTitle: insertPage.seoTitle || null,
+      seoDescription: insertPage.seoDescription || null,
+      createdAt: now,
+      updatedAt: now
+    };
+
+    this.db.prepare(`
+      INSERT INTO pages (
+        id, slug, title, content, status, seo_title, seo_description,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      page.id, page.slug, page.title, page.content, page.status,
+      page.seoTitle, page.seoDescription, page.createdAt, page.updatedAt
+    );
+
+    return page;
+  }
+
+  async getPage(id: string): Promise<Page | undefined> {
+    const result = this.db.prepare("SELECT * FROM pages WHERE id = ?").get(id) as any;
+    if (!result) return undefined;
+    
+    return {
+      id: result.id,
+      slug: result.slug,
+      title: result.title,
+      content: result.content,
+      status: result.status,
+      seoTitle: result.seo_title,
+      seoDescription: result.seo_description,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at
+    };
+  }
+
+  async getPageBySlug(slug: string): Promise<Page | undefined> {
+    const result = this.db.prepare("SELECT * FROM pages WHERE slug = ?").get(slug) as any;
+    if (!result) return undefined;
+    
+    return {
+      id: result.id,
+      slug: result.slug,
+      title: result.title,
+      content: result.content,
+      status: result.status,
+      seoTitle: result.seo_title,
+      seoDescription: result.seo_description,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at
+    };
+  }
+
+  async getAllPages(includePublishedOnly: boolean = false): Promise<Page[]> {
+    const query = includePublishedOnly 
+      ? "SELECT * FROM pages WHERE status = 'published' ORDER BY created_at DESC"
+      : "SELECT * FROM pages ORDER BY created_at DESC";
+    
+    const results = this.db.prepare(query).all() as any[];
+    
+    return results.map(result => ({
+      id: result.id,
+      slug: result.slug,
+      title: result.title,
+      content: result.content,
+      status: result.status,
+      seoTitle: result.seo_title,
+      seoDescription: result.seo_description,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at
+    }));
+  }
+
+  async updatePage(id: string, updates: Partial<Page>): Promise<Page | undefined> {
+    const now = new Date().toISOString();
+    const fields = Object.keys(updates).filter(key => key !== 'id' && key !== 'createdAt');
+    
+    if (fields.length === 0) {
+      return this.getPage(id);
+    }
+
+    const setClause = fields.map(field => {
+      // Convert camelCase to snake_case for database fields
+      switch (field) {
+        case 'seoTitle':
+          return 'seo_title = ?';
+        case 'seoDescription':
+          return 'seo_description = ?';
+        case 'updatedAt':
+          return 'updated_at = ?';
+        default:
+          return `${field} = ?`;
+      }
+    }).join(', ');
+    
+    const values = fields.map(field => updates[field as keyof Page]);
+
+    this.db.prepare(`
+      UPDATE pages 
+      SET ${setClause}, updated_at = ?
+      WHERE id = ?
+    `).run(...values, now, id);
+
+    return this.getPage(id);
+  }
+
+  async deletePage(id: string): Promise<boolean> {
+    const result = this.db.prepare("DELETE FROM pages WHERE id = ?").run(id);
+    return result.changes > 0;
   }
 }
 

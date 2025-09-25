@@ -80,6 +80,18 @@ export const testimonials = sqliteTable("testimonials", {
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`)
 });
 
+export const pages = sqliteTable("pages", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  content: text("content").notNull(), // JSON content blocks
+  status: text("status", { enum: ["draft", "published"] }).notNull().default("draft"),
+  seoTitle: text("seo_title"),
+  seoDescription: text("seo_description"),
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`)
+});
+
 
 // Validation schemas
 export const insertQuoteSchema = createInsertSchema(quotes).omit({
@@ -177,6 +189,99 @@ export const loginSchema = z.object({
 export const insertTestimonialSchema = createInsertSchema(testimonials).omit({
   id: true,
   createdAt: true
+});
+
+export const insertPageSchema = createInsertSchema(pages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  slug: true // Make slug auto-generated
+}).extend({
+  content: z.string().min(1, "Page content is required") // JSON string validation
+});
+
+// Page content block schemas for structured page building
+export const heroBlockSchema = z.object({
+  type: z.literal("hero"),
+  title: z.string().min(1, "Hero title is required"),
+  subtitle: z.string().optional(),
+  primaryCTA: z.object({
+    text: z.string().min(1, "CTA text is required"),
+    url: z.string().min(1, "CTA URL is required"),
+    variant: z.enum(["primary", "secondary"]).default("primary")
+  }).optional(),
+  secondaryCTA: z.object({
+    text: z.string().min(1, "CTA text is required"),
+    url: z.string().min(1, "CTA URL is required"),
+    variant: z.enum(["primary", "secondary"]).default("secondary")
+  }).optional(),
+  backgroundImage: z.string().optional()
+});
+
+export const textBlockSchema = z.object({
+  type: z.literal("text"),
+  content: z.string().min(1, "Text content is required"),
+  textAlign: z.enum(["left", "center", "right"]).default("left"),
+  size: z.enum(["sm", "md", "lg", "xl"]).default("md")
+});
+
+export const imageBlockSchema = z.object({
+  type: z.literal("image"),
+  src: z.string().min(1, "Image source is required"),
+  alt: z.string().min(1, "Image alt text is required"),
+  caption: z.string().optional(),
+  width: z.number().optional(),
+  height: z.number().optional()
+});
+
+export const productShowcaseSchema = z.object({
+  type: z.literal("product"),
+  title: z.string().min(1, "Product title is required"),
+  description: z.string().min(1, "Product description is required"),
+  image: z.string().optional(),
+  price: z.string().optional(),
+  checkoutUrl: z.string().min(1, "Checkout URL is required"),
+  features: z.array(z.string()).optional()
+});
+
+export const testimonialBlockSchema = z.object({
+  type: z.literal("testimonial"),
+  quote: z.string().min(1, "Testimonial quote is required"),
+  author: z.string().min(1, "Author name is required"),
+  company: z.string().optional(),
+  image: z.string().optional()
+});
+
+export const contactFormBlockSchema = z.object({
+  type: z.literal("contact"),
+  title: z.string().min(1, "Contact form title is required"),
+  description: z.string().optional(),
+  fields: z.array(z.object({
+    name: z.string().min(1),
+    label: z.string().min(1),
+    type: z.enum(["text", "email", "textarea", "select"]),
+    required: z.boolean().default(false),
+    options: z.array(z.string()).optional() // for select fields
+  })).min(1, "At least one form field is required")
+});
+
+// Union of all content blocks
+export const pageContentBlockSchema = z.discriminatedUnion("type", [
+  heroBlockSchema,
+  textBlockSchema,
+  imageBlockSchema,
+  productShowcaseSchema,
+  testimonialBlockSchema,
+  contactFormBlockSchema
+]);
+
+export const pageContentSchema = z.object({
+  blocks: z.array(pageContentBlockSchema),
+  seo: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    keywords: z.array(z.string()).optional()
+  }).optional()
 });
 
 
@@ -298,4 +403,16 @@ export type BrandContent = z.infer<typeof brandContentSchema>;
 export type HomeContent = z.infer<typeof homeContentSchema>;
 export type ServicesContent = z.infer<typeof servicesContentSchema>;
 export type MarketingContent = z.infer<typeof marketingContentSchema>;
+
+// Page types
+export type Page = typeof pages.$inferSelect;
+export type InsertPage = z.infer<typeof insertPageSchema>;
+export type PageContentBlock = z.infer<typeof pageContentBlockSchema>;
+export type PageContent = z.infer<typeof pageContentSchema>;
+export type HeroBlock = z.infer<typeof heroBlockSchema>;
+export type TextBlock = z.infer<typeof textBlockSchema>;
+export type ImageBlock = z.infer<typeof imageBlockSchema>;
+export type ProductShowcase = z.infer<typeof productShowcaseSchema>;
+export type TestimonialBlock = z.infer<typeof testimonialBlockSchema>;
+export type ContactFormBlock = z.infer<typeof contactFormBlockSchema>;
 
