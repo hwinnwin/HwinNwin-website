@@ -31,7 +31,10 @@ export default function PinModal({ isOpen, onClose, onSuccess }: PinModalProps) 
   const { toast } = useToast();
 
   const loginMutation = useMutation({
-    mutationFn: (pin: string) => apiRequest('POST', '/api/owner/login', { pin }),
+    mutationFn: async (pin: string) => {
+      const response = await apiRequest('POST', '/api/owner/login', { pin });
+      return response.json();
+    },
     onSuccess: (data: any) => {
       if (data.requiresOTP) {
         // 2FA is enabled - move to OTP step
@@ -54,7 +57,10 @@ export default function PinModal({ isOpen, onClose, onSuccess }: PinModalProps) 
   });
 
   const verifyOtpMutation = useMutation({
-    mutationFn: (otp: string) => apiRequest('POST', '/api/owner/verify-otp', { otp }),
+    mutationFn: async (otp: string) => {
+      const response = await apiRequest('POST', '/api/owner/verify-otp', { otp });
+      return response.json();
+    },
     onSuccess: () => {
       handleLoginSuccess();
     },
