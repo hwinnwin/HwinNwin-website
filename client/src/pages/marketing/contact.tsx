@@ -41,7 +41,7 @@ export default function ContactPage() {
   });
 
   const contactMutation = useMutation({
-    mutationFn: (data: ContactForm) => apiRequest('/api/contact', 'POST', data),
+    mutationFn: (data: ContactForm) => apiRequest('POST', '/api/contact', data),
     onSuccess: (response) => {
       setIsSubmitted(true);
       toast({

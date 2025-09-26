@@ -334,7 +334,7 @@ export class SqliteStorage implements IStorage {
         items_json, rates_json, calc_json, photos_json,
         owner_notes, estimated_hours, customer_link_slug,
         photos_representative_confirmed, provisional_estimate_confirmed
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       quote.id, quote.status, quote.createdAt, quote.updatedAt,
       quote.customerName, quote.customerFirstName, quote.customerLastName, quote.customerPhone, quote.customerEmail,
