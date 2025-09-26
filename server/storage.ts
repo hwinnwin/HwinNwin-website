@@ -115,6 +115,9 @@ export class SqliteStorage implements IStorage {
         calc_json TEXT NOT NULL,
         photos_json TEXT,
         owner_notes TEXT,
+        estimated_hours REAL DEFAULT 0,
+        customer_first_name TEXT,
+        customer_last_name TEXT,
         customer_link_slug TEXT NOT NULL UNIQUE,
         photos_representative_confirmed INTEGER NOT NULL DEFAULT 0,
         provisional_estimate_confirmed INTEGER NOT NULL DEFAULT 0
@@ -179,6 +182,32 @@ export class SqliteStorage implements IStorage {
 
       // Data migration: Fix existing bad JSON rows (one-time cleanup)
       this.migrateJsonFields();
+      
+      // Add new columns for quotes table if they don't exist
+      this.migrateQuotesTable();
+    }
+  }
+
+  private migrateQuotesTable(): void {
+    try {
+      // Add estimated_hours column if it doesn't exist
+      this.db.exec("ALTER TABLE quotes ADD COLUMN estimated_hours REAL DEFAULT 0");
+    } catch {
+      // Column already exists, ignore
+    }
+
+    try {
+      // Add customer_first_name column if it doesn't exist  
+      this.db.exec("ALTER TABLE quotes ADD COLUMN customer_first_name TEXT");
+    } catch {
+      // Column already exists, ignore
+    }
+
+    try {
+      // Add customer_last_name column if it doesn't exist
+      this.db.exec("ALTER TABLE quotes ADD COLUMN customer_last_name TEXT");
+    } catch {
+      // Column already exists, ignore
     }
   }
 
