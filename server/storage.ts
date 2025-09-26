@@ -306,6 +306,8 @@ export class SqliteStorage implements IStorage {
       createdAt: now,
       updatedAt: now,
       customerName: insertQuote.customerName,
+      customerFirstName: insertQuote.customerFirstName || null,
+      customerLastName: insertQuote.customerLastName || null,
       customerPhone: insertQuote.customerPhone,
       customerEmail: insertQuote.customerEmail,
       vehicleRego: insertQuote.vehicleRego,
@@ -318,6 +320,7 @@ export class SqliteStorage implements IStorage {
       calcJson: insertQuote.calcJson,
       photosJson: insertQuote.photos ? JSON.stringify(insertQuote.photos) : null,
       ownerNotes: null,
+      estimatedHours: insertQuote.estimatedHours || 0,
       customerLinkSlug: slug,
       photosRepresentativeConfirmed: insertQuote.photosRepresentativeConfirmed ?? false,
       provisionalEstimateConfirmed: insertQuote.provisionalEstimateConfirmed ?? false
@@ -326,18 +329,18 @@ export class SqliteStorage implements IStorage {
     this.db.prepare(`
       INSERT INTO quotes (
         id, status, created_at, updated_at,
-        customer_name, customer_phone, customer_email,
+        customer_name, customer_first_name, customer_last_name, customer_phone, customer_email,
         vehicle_rego, vehicle_make, vehicle_model, vehicle_year, vehicle_paint,
         items_json, rates_json, calc_json, photos_json,
-        owner_notes, customer_link_slug,
+        owner_notes, estimated_hours, customer_link_slug,
         photos_representative_confirmed, provisional_estimate_confirmed
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       quote.id, quote.status, quote.createdAt, quote.updatedAt,
-      quote.customerName, quote.customerPhone, quote.customerEmail,
+      quote.customerName, quote.customerFirstName, quote.customerLastName, quote.customerPhone, quote.customerEmail,
       quote.vehicleRego, quote.vehicleMake, quote.vehicleModel, quote.vehicleYear, quote.vehiclePaint,
       quote.itemsJson, quote.ratesJson, quote.calcJson, quote.photosJson,
-      quote.ownerNotes, quote.customerLinkSlug,
+      quote.ownerNotes, quote.estimatedHours, quote.customerLinkSlug,
       quote.photosRepresentativeConfirmed ? 1 : 0,
       quote.provisionalEstimateConfirmed ? 1 : 0
     );
@@ -357,6 +360,8 @@ export class SqliteStorage implements IStorage {
       createdAt: result.created_at,
       updatedAt: result.updated_at,
       customerName: result.customer_name,
+      customerFirstName: result.customer_first_name,
+      customerLastName: result.customer_last_name,
       customerPhone: result.customer_phone,
       customerEmail: result.customer_email,
       vehicleRego: result.vehicle_rego,
@@ -369,6 +374,7 @@ export class SqliteStorage implements IStorage {
       calcJson: result.calc_json,
       photosJson: result.photos_json,
       ownerNotes: result.owner_notes,
+      estimatedHours: result.estimated_hours || 0,
       customerLinkSlug: result.customer_link_slug,
       photosRepresentativeConfirmed: Boolean(result.photos_representative_confirmed),
       provisionalEstimateConfirmed: Boolean(result.provisional_estimate_confirmed)
@@ -386,6 +392,8 @@ export class SqliteStorage implements IStorage {
       createdAt: result.created_at,
       updatedAt: result.updated_at,
       customerName: result.customer_name,
+      customerFirstName: result.customer_first_name,
+      customerLastName: result.customer_last_name,
       customerPhone: result.customer_phone,
       customerEmail: result.customer_email,
       vehicleRego: result.vehicle_rego,
@@ -398,6 +406,7 @@ export class SqliteStorage implements IStorage {
       calcJson: result.calc_json,
       photosJson: result.photos_json,
       ownerNotes: result.owner_notes,
+      estimatedHours: result.estimated_hours || 0,
       customerLinkSlug: result.customer_link_slug,
       photosRepresentativeConfirmed: Boolean(result.photos_representative_confirmed),
       provisionalEstimateConfirmed: Boolean(result.provisional_estimate_confirmed)
