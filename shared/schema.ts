@@ -57,6 +57,7 @@ export const quotes = sqliteTable("quotes", {
   
   // Owner notes and approval
   ownerNotes: text("owner_notes"),
+  estimatedHours: real("estimated_hours").default(0), // Labor hours for calculation
   customerLinkSlug: text("customer_link_slug").notNull().unique(),
   
   // Terms acceptance
