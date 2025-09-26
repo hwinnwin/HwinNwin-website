@@ -1,5 +1,3 @@
-import React from 'react';
-
 export function JsonLd({ json }: { json: Record<string, any> }) {
   return (
     <script
