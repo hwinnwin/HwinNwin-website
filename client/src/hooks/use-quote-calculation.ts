@@ -40,7 +40,8 @@ export function useQuoteCalculation(
   items: DamageItem[], 
   paintType: "solid" | "metallic" | "pearlescent", 
   rates: RatesConfig,
-  hasRequiredPhotos: boolean = true
+  hasRequiredPhotos: boolean = true,
+  manualHours: number | null = null
 ): QuoteCalculation {
   return useMemo(() => {
     let repairHrs = 0;
@@ -73,7 +74,9 @@ export function useQuoteCalculation(
     paintHrs += blendPanels * 0.6;
     materials += blendPanels * (rates.materialsPerPanel * 0.5);
 
-    const labour = (repairHrs + paintHrs) * rates.labourRate;
+    // Use manual hours override if provided, otherwise use calculated hours
+    const totalHours = manualHours !== null ? manualHours : (repairHrs + paintHrs);
+    const labour = totalHours * rates.labourRate;
     const subtotalExGST = Math.max(labour + materials + parts, rates.minJob);
     const gst = Math.round(subtotalExGST * 0.10 * 100) / 100;
     const totalIncGST = Math.round((subtotalExGST + gst) * 100) / 100;
@@ -95,5 +98,5 @@ export function useQuoteCalculation(
       blendPanels,
       confidence
     };
-  }, [items, paintType, rates, hasRequiredPhotos]);
+  }, [items, paintType, rates, hasRequiredPhotos, manualHours]);
 }
