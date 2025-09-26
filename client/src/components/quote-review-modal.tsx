@@ -75,6 +75,7 @@ interface Quote {
   };
   photos: string[];
   ownerNotes: string;
+  estimatedHours: number;
   customerLinkSlug: string;
 }
 
@@ -93,6 +94,7 @@ const reviewSchema = z.object({
     pearlescentMultiplier: z.number().min(1),
     minJob: z.number().min(0)
   }),
+  estimatedHours: z.number().min(0).optional(),
   ownerNotes: z.string().optional()
 });
 
@@ -100,6 +102,7 @@ type ReviewFormData = z.infer<typeof reviewSchema>;
 
 export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteReviewModalProps) {
   const [items, setItems] = useState<DamageItem[]>([]);
+  const [useManualHours, setUseManualHours] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -112,8 +115,10 @@ export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteRevi
         form.reset({
           items: data.items,
           rates: data.rates,
+          estimatedHours: data.estimatedHours || 0,
           ownerNotes: data.ownerNotes || ""
         });
+        setUseManualHours(data.estimatedHours > 0);
       }
     }
   });
@@ -130,12 +135,15 @@ export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteRevi
         pearlescentMultiplier: 1.25,
         minJob: 220
       },
+      estimatedHours: 0,
       ownerNotes: ""
     }
   });
 
   const rates = form.watch('rates');
-  const calculation = useQuoteCalculation(items, quote?.vehiclePaint || 'metallic', rates);
+  const estimatedHours = form.watch('estimatedHours');
+  const manualHours = useManualHours && estimatedHours ? estimatedHours : null;
+  const calculation = useQuoteCalculation(items, quote?.vehiclePaint || 'metallic', rates, true, manualHours);
 
   const updateMutation = useMutation({
     mutationFn: (data: ReviewFormData) =>
@@ -499,10 +507,76 @@ export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteRevi
                   </div>
                 </div>
 
+                {/* Manual Hours Override */}
+                <Card className="bg-amber-50 border-amber-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-foreground">Manual Hours Override (Testing)</h4>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          checked={useManualHours} 
+                          onCheckedChange={setUseManualHours}
+                          data-testid="checkbox-use-manual-hours"
+                        />
+                        <label className="text-sm text-muted-foreground">Enable Override</label>
+                      </div>
+                    </div>
+                    
+                    {useManualHours && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="estimatedHours"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm text-muted-foreground">Estimated Hours</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step="0.1"
+                                  min="0"
+                                  {...field}
+                                  onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                                  data-testid="input-estimated-hours"
+                                  placeholder="Enter total labor hours"
+                                />
+                              </FormControl>
+                              <span className="text-xs text-muted-foreground">Total labor hours for this job</span>
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex items-end">
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // Trigger recalculation by forcing re-render
+                              form.setValue('estimatedHours', form.getValues('estimatedHours'));
+                            }}
+                            data-testid="button-recalculate"
+                          >
+                            🧮 Recalculate
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {useManualHours && (
+                      <Alert className="mt-3">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          Manual hours override is active. Labor costs will be calculated using {estimatedHours || 0} hours instead of auto-calculated hours ({(calculation.repairHrs + calculation.paintHrs).toFixed(1)} hrs).
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </CardContent>
+                </Card>
+
                 {/* Quote Calculation */}
                 <Card className="bg-primary/5">
                   <CardContent className="p-4">
-                    <h4 className="font-medium text-foreground mb-3">Quote Calculation</h4>
+                    <h4 className="font-medium text-foreground mb-3">Quote Calculation {useManualHours ? '(Manual Hours)' : '(Auto-Calculated)'}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                       <div>
                         <span className="text-muted-foreground">Repair Hours:</span>
