@@ -2,24 +2,11 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { MAIN_NAV_ITEMS, isActiveRoute } from "@/config/navigation";
 
 export default function TopNavigation() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  const navItems = [
-    { href: "/", label: "Home" },
-    { href: "/hwin/services", label: "Services" },
-    { href: "/hwin/work", label: "Case Studies" },
-    { href: "/panel-quote", label: "Auto Quoter" },
-  ];
-
-  const isActive = (href: string) => {
-    if (href === "/") {
-      return location === "/";
-    }
-    return location === href || location.startsWith(href);
-  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" data-testid="top-navigation">
@@ -34,12 +21,12 @@ export default function TopNavigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-8 justify-center flex-1">
-            {navItems.map((item) => (
+            {MAIN_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`text-sm font-medium transition-colors hover:text-primary px-2 py-1 rounded-md ${
-                  isActive(item.href)
+                  isActiveRoute(location, item.href)
                     ? "text-primary bg-primary/10 border border-primary/20"
                     : "text-foreground hover:bg-accent hover:text-accent-foreground"
                 }`}
@@ -80,12 +67,12 @@ export default function TopNavigation() {
             data-testid="mobile-menu"
           >
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {navItems.map((item) => (
+              {MAIN_NAV_ITEMS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={`block px-3 py-2 text-base font-medium transition-colors rounded-md ${
-                    isActive(item.href)
+                    isActiveRoute(location, item.href)
                       ? "text-primary bg-primary/10 border-l-4 border-primary"
                       : "text-foreground hover:text-primary hover:bg-accent"
                   }`}
