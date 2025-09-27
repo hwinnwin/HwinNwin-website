@@ -14,6 +14,7 @@ Preferred communication style: Simple, everyday language.
 - Enhanced content editor with Pages tab for dynamic page creation
 - Fixed authentication flow issues and runtime errors
 - Added auto-slug generation and content block system for flexible page layouts
+- **Stability & Performance Improvements**: Comprehensive fixes to prevent recurring blank page and navigation issues
 
 # System Architecture
 
@@ -93,3 +94,35 @@ Preferred communication style: Simple, everyday language.
 - **API Endpoints**: RESTful API supporting external system connectivity
 - **Email Integration**: SendGrid configured for automated communications
 - **Flexible Content**: JSON-based page content structure for programmatic access
+
+## Stability & Error Recovery Systems
+
+### React Runtime Stability
+- **Fixed JSX Import Issues**: Standardized all React imports across UI components to use `import React from "react"` instead of `import * as React from "react"` to prevent Vite React plugin preamble detection failures
+- **Centralized Navigation**: Implemented stable navigation configuration in `client/src/config/navigation.ts` to prevent navigation items from disappearing
+- **Enhanced Error Handling**: Comprehensive error recovery system with automatic fallback UI and recovery mechanisms
+
+### Error Recovery Features
+- **Automatic Recovery**: 5-second timeout check for failed React mounting with automatic page reload
+- **User-Friendly Error UI**: Professional error screens with recovery options (Refresh Page, Go to Homepage)
+- **Global Error Handling**: Window-level error handlers for unhandled exceptions and promise rejections
+- **Developer Tools**: Technical details available for debugging while maintaining user-friendly interface
+
+### Navigation Stability
+- **Consistent Navigation**: Centralized `MAIN_NAV_ITEMS` configuration ensures navigation never disappears
+- **Active Route Detection**: Robust `isActiveRoute()` function for proper navigation highlighting
+- **Mobile Responsive**: Stable navigation across desktop and mobile interfaces
+
+### Auto Quoter Integration
+- **Direct Access**: Auto Quoter accessible via main navigation ("/panel-quote")
+- **Stable Routes**: All application routes (/, /hwin, /panel-quote, /owner) properly configured and tested
+- **Owner Dashboard**: PIN 6043 for secure owner access with quote management and manual hours override
+
+### Technical Fixes Applied
+1. **React Import Standardization**: Fixed 40+ UI components with inconsistent React imports
+2. **Navigation Configuration**: Centralized navigation in `client/src/config/navigation.ts`
+3. **Error Recovery**: Enhanced `client/src/main.tsx` with comprehensive error handling
+4. **Hot Module Reload**: Stable HMR without breaking changes during development
+5. **Port Management**: Proper process cleanup to prevent EADDRINUSE errors
+
+These improvements ensure the application remains stable, with automatic recovery from common issues and user-friendly error handling when problems occur.
