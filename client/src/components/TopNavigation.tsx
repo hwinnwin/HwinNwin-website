@@ -11,6 +11,7 @@ export default function TopNavigation() {
     { href: "/", label: "Home" },
     { href: "/hwin/services", label: "Services" },
     { href: "/hwin/work", label: "Case Studies" },
+    { href: "/panel-quote", label: "Auto Quoter" },
   ];
 
   const isActive = (href: string) => {
