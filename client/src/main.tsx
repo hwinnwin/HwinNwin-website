@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { setupConsentListener } from "@/utils/cookieUtils";
 
 // Enhanced error handling and recovery system
 function initializeApp() {
@@ -19,6 +20,9 @@ function initializeApp() {
     const root = createRoot(rootElement);
     root.render(<App />);
     console.log("✅ React app rendered successfully");
+    
+    // Initialize cookie consent listener
+    setupConsentListener();
     
     // Add automatic recovery mechanism
     setTimeout(() => {

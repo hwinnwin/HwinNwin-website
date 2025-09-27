@@ -3,6 +3,7 @@ import { Mail, MapPin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { loadBrandData } from "@/lib/contentLoader";
 import logoUrl from "@assets/small simple logo_1758679347610.png";
+import { CookiePreferencesLink } from "@/components/CookiePreferencesLink";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -117,6 +118,7 @@ export default function Footer() {
             </p>
             
             <div className="flex items-center space-x-6">
+              <CookiePreferencesLink className="text-xs text-hwin-white/60 hover:text-gold" />
               <p className="text-xs text-hwin-white/40">
                 Built with <span className="text-gold">●</span> Power 
                 <span className="text-gold">●</span> Balance 
