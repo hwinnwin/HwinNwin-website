@@ -12,6 +12,7 @@ export default function MarketingNav() {
     { href: "/hwin/services", label: "Services" },
     { href: "/hwin/about", label: "About" },
     { href: "/hwin/work", label: "Case Studies" },
+    { href: "/panel-quote", label: "Auto Quoter" },
     { href: "/hwin/insights", label: "Blog" },
   ];
 
