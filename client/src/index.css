@@ -3,6 +3,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Main Header Navigation Styles */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #fff;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.main-nav {
+  display: flex;
+  gap: 1.5rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.main-nav a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+
+.cta {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #d4c29b;
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cta:hover {
+  background-color: #c5b48f;
+}
+
 :root {
   --background: hsl(210, 40%, 98%);
   --foreground: hsl(222.2, 84%, 4.9%);
