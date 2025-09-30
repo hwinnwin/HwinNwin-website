@@ -7,3 +7,4 @@ vite.config.ts.*
 cookies*.txt
 session*.txt
 /test_*.html
+.env
