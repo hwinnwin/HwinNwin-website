@@ -835,10 +835,9 @@ Melbourne, Australia
         photoValidation.isValid
       );
 
-      // Create quote with legacy customerName field for backward compatibility
+      // Create quote
       const quote = await storage.createQuote({
         ...quoteData,
-        customerName: `${quoteData.customerFirstName} ${quoteData.customerLastName}`,
         itemsJson: JSON.stringify(quoteData.items),
         ratesJson: JSON.stringify(rates),
         calcJson: JSON.stringify(calculation),
@@ -850,7 +849,7 @@ Melbourne, Australia
       if (emailService.isConfigured()) {
         await emailService.sendQuoteSubmissionConfirmation(
           quote.customerEmail,
-          quote.customerName,
+          quote.customerName || `${quote.customerFirstName} ${quote.customerLastName}`,
           quote.id
         );
       }
@@ -959,7 +958,7 @@ Melbourne, Australia
       if (emailService.isConfigured()) {
         const emailResult = await emailService.sendApprovedQuote(
           quote.customerEmail,
-          quote.customerName,
+          quote.customerName || `${quote.customerFirstName} ${quote.customerLastName}`,
           quoteUrl,
           pdfUrl,
           (calculation as any)?.totalIncGST || 0
