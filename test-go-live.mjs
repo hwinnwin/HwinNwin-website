@@ -1,0 +1,245 @@
+// test-go-live.mjs
+// Go-Live Validation Script — Sacred-Tech Codex
+// Usage: BASE_URL="https://your-domain.tld" npm run go-live:check
+// Default BASE_URL is http://localhost:3000
+
+import { chromium } from 'playwright';
+
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+
+// Adjust these to your actual analytics providers if different:
+const ANALYTICS_URL_PATTERNS = [
+  'www.google-analytics.com',
+  'googletagmanager.com/gtag/js',
+  'plausible.io/js',
+  'umami.is',
+  'cdn.segment.com',
+  'clarity.ms'
+];
+
+// All routes we want to sanity-check:
+const ROUTES = [
+  '/',                // Codex homepage (NEW)
+  '/hwin',            // Business marketing site
+  '/hwin/services',   // Services
+  '/hwin/about',      // About
+  '/hwin/work',       // Case Studies
+  '/hwin/insights',   // Blog
+  '/panel-quote',     // Auto Quoter
+  '/owner'            // Dashboard (PIN gated)
+];
+
+// Helper: simple logger with tally
+const results = [];
+const log = (ok, msg) => {
+  results.push({ ok, msg });
+  const mark = ok ? '✅' : '❌';
+  console.log(`${mark} ${msg}`);
+};
+
+const expect = (condition, success, failure) => {
+  if (condition) log(true, success);
+  else log(false, failure);
+};
+
+const within = async (page, selector, ms = 3000) => {
+  try {
+    await page.waitForSelector(selector, { timeout: ms });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const countConsoleErrors = (messages) =>
+  messages.filter(m => ['error'].includes(m.type())).length;
+
+(async () => {
+  // --- Context 1: Normal user (no consent yet) ---
+  const browser = await chromium.launch();
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  let networkLog = [];
+  page.on('request', req => networkLog.push(req.url()));
+  const consoleMsgs = [];
+  page.on('console', (m) => consoleMsgs.push(m));
+
+  console.log('\n=== ▶ Stage 1: SEO + Route Health + Console ===\n');
+
+  // 1) Route health & basic checks
+  for (const route of ROUTES) {
+    const url = BASE_URL + route;
+    const res = await page.goto(url, { waitUntil: 'domcontentloaded' }).catch(() => null);
+    const status = res?.status();
+    expect(
+      status && status < 400,
+      `Route ${route} returns ${status || 'no response'} (<400)`,
+      `Route ${route} failed or returned ${status}`
+    );
+  }
+
+  // 2) Homepage SEO checks
+  await page.goto(BASE_URL + '/', { waitUntil: 'domcontentloaded' });
+  const title = await page.title();
+  const metaDescription = await page.locator('head meta[name="description"]').getAttribute('content').catch(() => null);
+  const ogTitle = await page.locator('head meta[property="og:title"]').getAttribute('content').catch(() => null);
+  const ogDescription = await page.locator('head meta[property="og:description"]').getAttribute('content').catch(() => null);
+  const ogImage = await page.locator('head meta[property="og:image"]').getAttribute('content').catch(() => null);
+  const canonical = await page.locator('head link[rel="canonical"]').getAttribute('href').catch(() => null);
+
+  expect(!!title && title.length > 5, `SEO: <title> present ("${title}")`, 'SEO: <title> missing/too short');
+  expect(!!metaDescription && metaDescription.length > 30, 'SEO: meta description present', 'SEO: meta description missing/too short');
+  expect(!!ogTitle, 'SEO: og:title present', 'SEO: og:title missing');
+  expect(!!ogDescription, 'SEO: og:description present', 'SEO: og:description missing');
+  expect(!!ogImage, 'SEO: og:image present', 'SEO: og:image missing');
+  expect(!!canonical, 'SEO: canonical link present', 'SEO: canonical link missing');
+
+  // 3) Cookie banner / Manage Cookies link
+  const hasManageCookies = await within(page, 'text=/Manage Cookies/i') ||
+                           await within(page, 'a[href*="cookie"], button:has-text("Manage Cookies")');
+  expect(hasManageCookies, 'Cookie: "Manage Cookies" control visible', 'Cookie: "Manage Cookies" control NOT found');
+
+  // 4) Console error sweep
+  const errorCount = countConsoleErrors(consoleMsgs);
+  expect(errorCount === 0, 'Console: no errors detected', `Console: ${errorCount} error(s) detected`);
+
+  // --- Stage 2: Consent OFF should block analytics ---
+  console.log('\n=== ▶ Stage 2: Cookie Consent Blocking Analytics ===\n');
+
+  networkLog = [];
+  await page.goto(BASE_URL + '/', { waitUntil: 'domcontentloaded' });
+
+  // Open cookie settings (try common patterns)
+  const openers = [
+    'text=/Manage Cookies/i',
+    'button:has-text("Manage Cookies")',
+    'a:has-text("Manage Cookies")',
+    '[data-testid="manage-cookies"]'
+  ];
+  let opened = false;
+  for (const sel of openers) {
+    if (await within(page, sel, 1500)) {
+      await page.click(sel).catch(() => {});
+      opened = true;
+      break;
+    }
+  }
+  expect(opened, 'Cookie: settings panel opened', 'Cookie: failed to open settings panel');
+
+  // Turn OFF preferences/analytics/marketing if toggles exist
+  const candidateToggles = [
+    'input[name*="analytics"]',
+    'input[id*="analytics"]',
+    'input[name*="marketing"]',
+    'input[id*="marketing"]',
+    'input[name*="preferences"]',
+    'input[id*="preferences"]',
+  ];
+  let toggledAny = false;
+  for (const sel of candidateToggles) {
+    const count = await page.locator(sel).count();
+    for (let i = 0; i < count; i++) {
+      const box = page.locator(sel).nth(i);
+      const checked = await box.isChecked().catch(() => false);
+      if (checked) {
+        await box.click().catch(() => {});
+        toggledAny = true;
+      }
+    }
+  }
+
+  // Save/apply choices
+  const savers = [
+    'button:has-text("Save")',
+    'button:has-text("Apply")',
+    'button:has-text("Confirm")',
+    '[data-testid="save-cookies"]'
+  ];
+  let saved = false;
+  for (const sel of savers) {
+    if (await within(page, sel, 1200)) {
+      await page.click(sel).catch(() => {});
+      saved = true;
+      break;
+    }
+  }
+
+  // Reload and observe network
+  await page.reload({ waitUntil: 'load' });
+
+  const analyticsRequestsAfterBlock = networkLog.filter(url =>
+    ANALYTICS_URL_PATTERNS.some(p => url.includes(p))
+  );
+
+  // If we couldn't find a toggle, we still check network to ensure no analytics loaded by default
+  if (!toggledAny) {
+    log(true, 'Cookie: no explicit toggles found — verifying no analytics load by default');
+  }
+  expect(
+    analyticsRequestsAfterBlock.length === 0,
+    'Analytics: blocked when consent is OFF',
+    `Analytics: still loading (${analyticsRequestsAfterBlock.join(', ')})`
+  );
+
+  // --- Stage 3: Do Not Track (DNT=1) must block analytics ---
+  console.log('\n=== ▶ Stage 3: DNT enforcement ===\n');
+
+  const dntContext = await browser.newContext({
+    extraHTTPHeaders: { DNT: '1' }
+  });
+  const dntPage = await dntContext.newPage();
+  let dntNet = [];
+  dntPage.on('request', req => dntNet.push(req.url()));
+
+  await dntPage.goto(BASE_URL + '/', { waitUntil: 'domcontentloaded' });
+
+  const dntAnalytics = dntNet.filter(url =>
+    ANALYTICS_URL_PATTERNS.some(p => url.includes(p))
+  );
+
+  expect(
+    dntAnalytics.length === 0,
+    'DNT: analytics not loaded when DNT=1',
+    `DNT: analytics still loaded (${dntAnalytics.join(', ')})`
+  );
+
+  await dntContext.close();
+
+  // --- Stage 4: Owner gate sanity (PIN presence) ---
+  console.log('\n=== ▶ Stage 4: Owner Dashboard Gate ===\n');
+  await page.goto(BASE_URL + '/owner', { waitUntil: 'domcontentloaded' });
+
+  // Look for common PIN UI elements
+  const hasPinUI =
+    (await within(page, 'input[type="password"]', 1200)) ||
+    (await within(page, 'input[type="tel"]', 1200)) ||
+    (await within(page, 'input[name*="pin"], input[id*="pin"]', 1200)) ||
+    (await within(page, 'text=/PIN/i', 1200));
+  expect(
+    hasPinUI,
+    'Owner: PIN gate appears present',
+    'Owner: PIN gate UI not detected (verify route protection manually)'
+  );
+
+  // --- Wrap up ---
+  await browser.close();
+
+  const passed = results.filter(r => r.ok).length;
+  const failed = results.length - passed;
+
+  console.log('\n==================== SUMMARY ====================');
+  for (const r of results) {
+    console.log(`${r.ok ? '✅' : '❌'} ${r.msg}`);
+  }
+  console.log('=================================================');
+  console.log(`Total checks: ${results.length} | Passed: ${passed} | Failed: ${failed}`);
+
+  if (failed > 0) {
+    console.log('\n🔎 Fix the ❌ items above, then re-run:\n  BASE_URL="<your-prod-url>" npm run go-live:check\n');
+    process.exit(1);
+  } else {
+    console.log('\n🚀 All checks passed. You are clear to deploy.\n');
+    process.exit(0);
+  }
+})();
