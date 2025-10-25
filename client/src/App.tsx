@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -24,10 +25,17 @@ import CaseStudiesPage from "@/pages/marketing/case-studies";
 import CaseStudyPage from "@/pages/marketing/case-study";
 import BlogPage from "@/pages/marketing/blog";
 import BlogPostPage from "@/pages/marketing/blog-post";
-import ContactPage from "@/pages/marketing/contact";
+import MarketingContactPage from "@/pages/marketing/contact";
 import LegalPage from "@/pages/marketing/legal";
 import DynamicPage from "@/pages/dynamic-page";
 import ProjectsPage from "@/pages/projects";
+
+// Lazy-loaded Blog Pages (Consciousness Bridging) - Code Splitting
+const BlogIndex = lazy(() => import("@/pages/blog/BlogIndex"));
+const BlogPost = lazy(() => import("@/pages/blog/BlogPost"));
+
+// Lazy-loaded Contact Page - Code Splitting
+const ContactPage = lazy(() => import("@/pages/Contact"));
 
 function Router() {
   return (
@@ -37,6 +45,18 @@ function Router() {
       
       {/* Projects Page */}
       <Route path="/projects" component={ProjectsPage} />
+      
+      {/* Blog Routes (Consciousness Bridging) - Lazy Loaded */}
+      <Route path="/blog">
+        <Suspense fallback={<div data-testid="loading-blog" className="min-h-screen flex items-center justify-center">Loading...</div>}>
+          <BlogIndex />
+        </Suspense>
+      </Route>
+      <Route path="/blog/:slug">
+        <Suspense fallback={<div data-testid="loading-blog-post" className="min-h-screen flex items-center justify-center">Loading...</div>}>
+          <BlogPost />
+        </Suspense>
+      </Route>
       
       {/* Existing Automotive App Routes - moved to dedicated paths */}
       <Route path="/panel-quote" component={CustomerForm} />
@@ -53,7 +73,14 @@ function Router() {
       <Route path="/hwin/work/:slug" component={CaseStudyPage} />
       <Route path="/hwin/insights" component={BlogPage} />
       <Route path="/hwin/insights/:slug" component={BlogPostPage} />
-      <Route path="/hwin/contact" component={ContactPage} />
+      <Route path="/hwin/contact" component={MarketingContactPage} />
+      
+      {/* Simple Contact Form - Lazy Loaded */}
+      <Route path="/contact">
+        <Suspense fallback={<div data-testid="loading-contact" className="min-h-screen flex items-center justify-center">Loading...</div>}>
+          <ContactPage />
+        </Suspense>
+      </Route>
       
       {/* Legal Pages */}
       <Route path="/legal/:type" component={LegalPage} />

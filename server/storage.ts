@@ -14,7 +14,8 @@ import type {
   DamageItem,
   QuoteCalculation,
   Page,
-  InsertPage
+  InsertPage,
+  ContactSubmission
 } from "@shared/schema";
 
 export interface IStorage {
@@ -55,10 +56,17 @@ export interface IStorage {
   getAllPages(includePublishedOnly?: boolean): Promise<Page[]>;
   updatePage(id: string, updates: Partial<Page>): Promise<Page | undefined>;
   deletePage(id: string): Promise<boolean>;
+  
+  // Contact submissions (in-memory for Owner Insights)
+  createContactSubmission(submission: Omit<ContactSubmission, 'id' | 'timestamp' | 'status'>): ContactSubmission;
+  getAllContactSubmissions(): ContactSubmission[];
+  getContactSubmission(id: string): ContactSubmission | undefined;
+  updateContactSubmission(id: string, updates: Partial<ContactSubmission>): ContactSubmission | undefined;
 }
 
 export class SqliteStorage implements IStorage {
   private db: Database.Database;
+  private contactSubmissions: Map<string, ContactSubmission> = new Map();
 
   constructor() {
     const dataDir = path.join(process.cwd(), "data");
@@ -711,6 +719,41 @@ export class SqliteStorage implements IStorage {
   async deletePage(id: string): Promise<boolean> {
     const result = this.db.prepare("DELETE FROM pages WHERE id = ?").run(id);
     return result.changes > 0;
+  }
+
+  // Contact submissions - in-memory storage for Owner Insights panel
+  createContactSubmission(submission: Omit<ContactSubmission, 'id' | 'timestamp' | 'status'>): ContactSubmission {
+    const id = randomUUID();
+    const timestamp = new Date().toISOString();
+    
+    const newSubmission: ContactSubmission = {
+      id,
+      ...submission,
+      timestamp,
+      status: 'new'
+    };
+    
+    this.contactSubmissions.set(id, newSubmission);
+    return newSubmission;
+  }
+
+  getAllContactSubmissions(): ContactSubmission[] {
+    return Array.from(this.contactSubmissions.values()).sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }
+
+  getContactSubmission(id: string): ContactSubmission | undefined {
+    return this.contactSubmissions.get(id);
+  }
+
+  updateContactSubmission(id: string, updates: Partial<ContactSubmission>): ContactSubmission | undefined {
+    const submission = this.contactSubmissions.get(id);
+    if (!submission) return undefined;
+    
+    const updated = { ...submission, ...updates };
+    this.contactSubmissions.set(id, updated);
+    return updated;
   }
 }
 

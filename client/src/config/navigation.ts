@@ -30,9 +30,19 @@ export const MAIN_NAV_ITEMS: NavItem[] = [
     description: "Panel repair quotation tool"
   },
   { 
+    href: "/blog", 
+    label: "Insights",
+    description: "Consciousness bridging philosophy and design"
+  },
+  { 
     href: "/hwin/insights", 
-    label: "Blog",
-    description: "Insights and articles"
+    label: "Business Blog",
+    description: "Business insights and articles"
+  },
+  { 
+    href: "/contact", 
+    label: "Contact",
+    description: "Get in touch with us"
   }
 ];
 

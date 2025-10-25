@@ -13,14 +13,15 @@ import { requireOwnerPin, createOwnerSession, requireOwnerSession, requirePendin
 import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema, contactFormSchema, marketingContentSchema, loginSchema, otpVerificationSchema, twoFaSettingsSchema, insertPageSchema, pageContentSchema } from "@shared/schema";
 import { hashPin, comparePin, isPinHashed } from "./services/pinService";
 import { generateOTPRecord, verifyOTP, isOTPExpired, clearOTPData, isValidOTPFormat } from "./services/otpService";
+import { registerContactRoutes } from "./routes/contact";
 import { z } from "zod";
 import fs from "fs/promises";
 import matter from "gray-matter";
 
 // Helper function to generate meta tags for SEO
 function generateSeoMeta(pageData: {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
@@ -28,16 +29,18 @@ function generateSeoMeta(pageData: {
   keywords?: string[];
 }) {
   const baseUrl = process.env.BASE_URL || 'https://hwinnwin.com';
-  const ogImage = pageData.ogImage || `${baseUrl}/og-image.png`;
+  const title = pageData.title || "HwinNwin — Conscious Tech & Design";
+  const description = pageData.description || "Bridging consciousness across human, machine, and environment. Where awareness recognizes itself through every state change.";
+  const ogImage = pageData.ogImage || `${baseUrl}/og/default.png`;
   
   return `
-    <title>${pageData.title}</title>
-    <meta name="description" content="${pageData.description}" />
+    <title>${title}</title>
+    <meta name="description" content="${description}" />
     <meta name="keywords" content="${pageData.keywords?.join(', ') || ''}" />
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="${pageData.ogTitle || pageData.title}" />
-    <meta property="og:description" content="${pageData.ogDescription || pageData.description}" />
+    <meta property="og:title" content="${pageData.ogTitle || title}" />
+    <meta property="og:description" content="${pageData.ogDescription || description}" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="${pageData.canonicalUrl}" />
     <meta property="og:image" content="${ogImage}" />
@@ -45,8 +48,8 @@ function generateSeoMeta(pageData: {
     
     <!-- Twitter Card tags -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${pageData.ogTitle || pageData.title}" />
-    <meta name="twitter:description" content="${pageData.ogDescription || pageData.description}" />
+    <meta name="twitter:title" content="${pageData.ogTitle || title}" />
+    <meta name="twitter:description" content="${pageData.ogDescription || description}" />
     <meta name="twitter:image" content="${ogImage}" />
     
     <!-- Canonical URL -->
@@ -1394,6 +1397,49 @@ Melbourne, Australia
     });
   });
 
+  // Owner insights endpoint - contact form statistics
+  app.get('/api/owner/insights', requireOwnerSession, async (req, res) => {
+    try {
+      const allSubmissions = storage.getAllContactSubmissions();
+      
+      // Calculate date ranges
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      
+      // Filter by date ranges
+      const last7Days = allSubmissions.filter(sub => 
+        new Date(sub.timestamp) >= sevenDaysAgo
+      ).length;
+      
+      const last30Days = allSubmissions.filter(sub => 
+        new Date(sub.timestamp) >= thirtyDaysAgo
+      ).length;
+      
+      // Get recent 5 submissions with truncated messages
+      const recentSubmissions = allSubmissions
+        .slice(0, 5)
+        .map(sub => ({
+          name: sub.name,
+          email: sub.email,
+          date: sub.timestamp,
+          message: sub.message.length > 50 
+            ? sub.message.substring(0, 50) + '...' 
+            : sub.message
+        }));
+      
+      res.json({
+        totalContacts: allSubmissions.length,
+        last7Days,
+        last30Days,
+        recentSubmissions
+      });
+    } catch (error) {
+      console.error('Owner insights error:', error);
+      res.status(500).json({ message: "Failed to fetch insights" });
+    }
+  });
+
   // Settings management (owner only)
   app.get('/api/settings', requireOwnerSession, async (req, res) => {
     try {
@@ -1788,6 +1834,9 @@ Melbourne, Australia
       res.status(500).json({ error: 'Failed to delete page' });
     }
   });
+
+  // Register contact form routes
+  registerContactRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
