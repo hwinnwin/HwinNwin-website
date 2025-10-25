@@ -69,7 +69,7 @@ export function useCookieConsent(): CookieConsentHook {
   const acceptAll = useCallback(() => {
     updateConsent({
       analytics: true,
-      functional: true,
+      preferences: true,
       marketing: true
     });
   }, [updateConsent]);
@@ -78,7 +78,7 @@ export function useCookieConsent(): CookieConsentHook {
   const rejectOptional = useCallback(() => {
     updateConsent({
       analytics: false,
-      functional: false,
+      preferences: false,
       marketing: false
     });
   }, [updateConsent]);
