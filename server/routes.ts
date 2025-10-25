@@ -289,11 +289,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin',
-      title: 'HwinNwin - AI Automation & Creative Ecosystems',
-      description: 'Scale your business with AI automation and creative ecosystems. We deliver powerful solutions with balanced approach for lasting prosperity in Melbourne, Australia.',
-      ogTitle: 'HwinNwin - AI Automation & Creative Ecosystems',
-      ogDescription: 'Professional business solutions including AI automation, creative systems, consulting, and strategic planning to help Australian businesses thrive.',
-      keywords: ['AI automation', 'creative ecosystems', 'business scaling', 'Melbourne business consulting', 'strategic planning', 'implementation support']
+      title: 'HwinNwin — Conscious Tech & Design',
+      description: 'Bridging consciousness across human, machine, and environment. Where awareness recognizes itself through every state change.',
+      ogTitle: 'HwinNwin — Conscious Tech & Design',
+      ogDescription: 'Bridging consciousness across human, machine, and environment. Where awareness recognizes itself through every state change.',
+      keywords: ['conscious technology', 'conscious design', 'awareness', 'state change', 'human-machine-environment', 'consciousness bridging']
     });
   });
 
@@ -301,11 +301,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/services', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/services',
-      title: 'Our Services - HwinNwin',
-      description: 'Comprehensive AI automation and creative systems solutions designed to scale your business with structure, mindset, and excellence. Professional consulting services in Melbourne, Australia.',
-      ogTitle: 'Our Services - HwinNwin',
-      ogDescription: 'From AI automation to creative systems implementation, we offer comprehensive business solutions starting from AUD 5,000. Melbourne-based consulting.',
-      keywords: ['AI automation services', 'creative systems', 'business consulting Melbourne', 'strategic planning', 'implementation support', 'custom solutions']
+      title: 'Services — Conscious Technology Design | HwinNwin',
+      description: 'Technology that recognizes awareness across all states. Design systems where human, machine, and environment bridge consciousness through intentional state changes.',
+      ogTitle: 'Services — Conscious Technology Design | HwinNwin',
+      ogDescription: 'Technology that recognizes awareness across all states. Design systems where human, machine, and environment bridge consciousness.',
+      keywords: ['conscious technology', 'awareness design', 'state-aware systems', 'consciousness bridging', 'intentional technology', 'aware design']
     });
   });
 
@@ -313,11 +313,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/about', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/about',
-      title: 'About HwinNwin - Structure, Mindset, Excellence',
-      description: 'Learn about HwinNwin\'s mission to help businesses scale with structure, mindset, and excellence through our proven 3P Check methodology. Melbourne-based business consultants.',
-      ogTitle: 'About HwinNwin - Structure, Mindset, Excellence',
-      ogDescription: 'Discover how HwinNwin helps Australian businesses achieve sustainable growth through our proven 3P Check: Power, Balance, and Prosperity.',
-      keywords: ['HwinNwin', 'business consulting', '3P Check methodology', 'structure mindset excellence', 'Melbourne consultants', 'sustainable growth']
+      title: 'About — Bridging Awareness | HwinNwin',
+      description: 'Where technology becomes aware of awareness. Creating systems that recognize consciousness across human, machine, and environmental states.',
+      ogTitle: 'About — Bridging Awareness | HwinNwin',
+      ogDescription: 'Creating systems that recognize consciousness across human, machine, and environmental states. Technology aware of awareness.',
+      keywords: ['conscious technology', 'awareness systems', 'consciousness design', 'state recognition', 'aware technology', 'consciousness bridging']
     });
   });
 
@@ -325,11 +325,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/work', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/work',
-      title: 'Our Work - Case Studies | HwinNwin',
-      description: 'Explore our proven case studies showcasing AI automation and creative systems implementations. Real results from Melbourne businesses across various industries.',
-      ogTitle: 'Our Work - Case Studies | HwinNwin',
-      ogDescription: 'See how we\'ve helped Australian businesses scale with AI automation, creative systems, and strategic implementations. Real results, measurable impact.',
-      keywords: ['case studies', 'business automation results', 'Melbourne consulting success', 'AI implementation examples', 'creative systems case studies']
+      title: 'Work — Consciousness in Practice | HwinNwin',
+      description: 'Systems where awareness recognizes itself. Projects bridging consciousness across human, machine, and environment through state-aware design.',
+      ogTitle: 'Work — Consciousness in Practice | HwinNwin',
+      ogDescription: 'Projects bridging consciousness across human, machine, and environment through state-aware design.',
+      keywords: ['conscious design projects', 'awareness systems', 'state-aware technology', 'consciousness bridging', 'intentional design', 'aware systems']
     });
   });
 
@@ -359,11 +359,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/insights', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/insights',
-      title: 'Business Insights & Articles | HwinNwin',
-      description: 'Strategic business insights, AI automation guides, and creative systems articles. Expert advice from Melbourne consultants on scaling your business effectively.',
-      ogTitle: 'Business Insights & Articles | HwinNwin',
-      ogDescription: 'Read expert insights on business scaling, AI automation, and creative systems from Melbourne-based consultants. Practical advice for sustainable growth.',
-      keywords: ['business insights', 'AI automation guides', 'scaling strategies', 'Melbourne business advice', 'creative systems blog', 'consulting articles']
+      title: 'Insights — Exploring Conscious Design | HwinNwin',
+      description: 'Reflections on consciousness, technology, and awareness. Exploring how systems recognize themselves through intentional state changes.',
+      ogTitle: 'Insights — Exploring Conscious Design | HwinNwin',
+      ogDescription: 'Reflections on consciousness, technology, and awareness. Exploring how systems recognize themselves through state changes.',
+      keywords: ['conscious technology', 'awareness design', 'state awareness', 'consciousness exploration', 'intentional systems', 'design philosophy']
     });
   });
 
@@ -393,11 +393,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/contact', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/contact',
-      title: 'Contact Us - Get Started Today | HwinNwin',
-      description: 'Ready to scale your business? Contact HwinNwin for AI automation, creative systems, and strategic consulting. Melbourne-based consultants ready to help.',
-      ogTitle: 'Contact Us - Get Started Today | HwinNwin',
-      ogDescription: 'Start your business transformation today. Contact Melbourne-based consultants for AI automation, creative systems, and strategic planning services.',
-      keywords: ['contact business consultants', 'Melbourne consulting', 'AI automation consultation', 'business scaling help', 'get started']
+      title: 'Connect — Begin the Conversation | HwinNwin',
+      description: 'Start a dialogue about consciousness in technology. Connect with us to explore how awareness can bridge your systems.',
+      ogTitle: 'Connect — Begin the Conversation | HwinNwin',
+      ogDescription: 'Start a dialogue about consciousness in technology. Explore how awareness can bridge your systems.',
+      keywords: ['conscious technology contact', 'awareness design inquiry', 'connect', 'consciousness conversation', 'intentional design']
     });
   });
 
