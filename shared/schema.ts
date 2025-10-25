@@ -334,7 +334,7 @@ export type TwoFaSettings = z.infer<typeof twoFaSettingsSchema>;
 export type OtpVerification = z.infer<typeof otpVerificationSchema>;
 export type Login = z.infer<typeof loginSchema>;
 
-// Contact form schema for marketing site
+// Contact form schema for marketing site (full version)
 export const contactFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
   email: z.string().email("Please enter a valid email address").max(100, "Email is too long"),
@@ -348,7 +348,31 @@ export const contactFormSchema = z.object({
   honeypot: z.string().max(0, "Invalid request").optional().or(z.literal(""))
 });
 
+// Simple contact form schema with consent checkbox
+export const simpleContactFormSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+  email: z.string().email("Please enter a valid email address").max(100, "Email is too long"),
+  message: z.string().min(10, "Message must be at least 10 characters").max(2000, "Message is too long"),
+  consent: z.boolean().refine(val => val === true, {
+    message: "You must agree to be contacted about your inquiry"
+  }),
+  // Honeypot field for spam protection (should always be empty)
+  website: z.string().max(0, "Invalid request").optional().or(z.literal(""))
+});
+
 export type ContactForm = z.infer<typeof contactFormSchema>;
+export type SimpleContactForm = z.infer<typeof simpleContactFormSchema>;
+
+// Contact submission type for storage
+export interface ContactSubmission {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  consent: boolean;
+  timestamp: string;
+  status: "new" | "read" | "responded";
+}
 
 // YAML Content validation schemas
 export const brandContentSchema = z.object({

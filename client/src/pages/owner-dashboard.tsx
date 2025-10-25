@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useOwnerAuth } from "@/hooks/use-owner-auth";
 import QuoteReviewModal from "@/components/quote-review-modal";
 import PinModal from "@/components/pin-modal";
+import InsightsPanel from "@/components/owner/InsightsPanel";
 import { 
   FileText, 
   CheckCircle, 
@@ -234,6 +235,11 @@ export default function OwnerDashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Manage quotes, settings, and analytics</p>
+        </div>
+
+        {/* Contact Insights Panel */}
+        <div className="mb-8">
+          <InsightsPanel />
         </div>
 
         {/* Analytics Cards */}

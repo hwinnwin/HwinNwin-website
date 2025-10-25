@@ -182,6 +182,7 @@ export default function PublicQuote() {
                     className="w-full h-32 object-cover rounded-lg border border-border cursor-pointer hover:opacity-90"
                     onClick={() => window.open(`/uploads/${photo}`, '_blank')}
                     data-testid={`photo-${index}`}
+                    loading="lazy"
                   />
                 ))}
               </div>

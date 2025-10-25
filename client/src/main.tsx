@@ -3,6 +3,41 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import { setupConsentListener } from "@/utils/cookieUtils";
+import { loadPlausible } from "@/lib/analytics/plausible";
+import { checkDoNotTrack } from "@/types/cookies";
+
+// Initialize analytics if consent is granted
+function maybeInitAnalytics() {
+  try {
+    // Check for DNT first
+    if (checkDoNotTrack()) {
+      console.log("📊 Analytics blocked: Do Not Track enabled");
+      return;
+    }
+
+    // Check for stored consent
+    const consentData = localStorage.getItem('cookie_consent');
+    if (!consentData) {
+      console.log("📊 Analytics not loaded: No consent given yet");
+      return;
+    }
+
+    const consent = JSON.parse(consentData);
+    if (consent.analytics) {
+      const domain = import.meta.env.VITE_PLAUSIBLE_DOMAIN;
+      if (domain) {
+        loadPlausible(domain);
+        console.log("✅ Analytics initialized with consent");
+      } else {
+        console.warn("⚠️ VITE_PLAUSIBLE_DOMAIN not configured");
+      }
+    } else {
+      console.log("📊 Analytics not loaded: Analytics consent not granted");
+    }
+  } catch (error) {
+    console.error("Error initializing analytics:", error);
+  }
+}
 
 // Enhanced error handling and recovery system
 function initializeApp() {
@@ -21,8 +56,17 @@ function initializeApp() {
     root.render(<App />);
     console.log("✅ React app rendered successfully");
     
+    // Initialize analytics on app bootstrap
+    maybeInitAnalytics();
+    
     // Initialize cookie consent listener
     setupConsentListener();
+    
+    // Set up consent change listener to reload page when consent changes
+    window.addEventListener('cookieConsentUpdated', () => {
+      console.log("🔄 Cookie consent updated, reloading to apply changes...");
+      window.location.reload();
+    });
     
     // Add automatic recovery mechanism
     setTimeout(() => {

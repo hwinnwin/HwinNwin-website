@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <!-- Homepage / Codex (Highest Priority) -->
+  <url>
+    <loc>https://hwinnwin.com/</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Marketing Pages -->
+  <url>
+    <loc>https://hwinnwin.com/hwin</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <url>
+    <loc>https://hwinnwin.com/hwin/services</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://hwinnwin.com/hwin/about</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://hwinnwin.com/hwin/work</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://hwinnwin.com/hwin/insights</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Auto Quoter Tool -->
+  <url>
+    <loc>https://hwinnwin.com/panel-quote</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Contact Page -->
+  <url>
+    <loc>https://hwinnwin.com/contact</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Blog Index (High Priority for Content) -->
+  <url>
+    <loc>https://hwinnwin.com/blog</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Blog Posts (High Priority) -->
+  <url>
+    <loc>https://hwinnwin.com/blog/consciousness-bridging-intro</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <url>
+    <loc>https://hwinnwin.com/blog/designing-with-state-change-awareness</loc>
+    <lastmod>2025-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+</urlset>

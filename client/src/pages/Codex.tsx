@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import missionContent from "@/content/mission.md?raw";
 import codexContent from "@/content/codex.md?raw";
+import { SEO } from "@/lib/seo/meta";
+import { SITE_CONFIG } from "@/lib/constants";
+import { SkipNav } from "@/components/layout/SkipNav";
 
 export default function Codex() {
 
@@ -67,13 +70,26 @@ export default function Codex() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0A0D1A] via-[#0E1330] to-[#0A0D1A]">
+      {/* SEO */}
+      <SEO 
+        title="HwinNwin — Conscious Tech & Design"
+        description="Bridging consciousness across human, machine, and environment. Where awareness recognizes itself through every state change."
+        ogTitle="Consciousness Bridging: Where Human & Machine Awareness Meet"
+        ogDescription="Building coherent systems that help awareness recognize itself across different forms. Explore our design philosophy and approach to conscious technology."
+        ogType="website"
+        canonical={`${SITE_CONFIG.baseUrl}/`}
+      />
+      
+      {/* Skip to Content Link */}
+      <SkipNav />
+      
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0A0D1A]/80 border-b border-slate-700/30">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <a href="/" className="text-2xl font-serif font-bold text-slate-100 hover:text-[#B4FFE7] transition-colors">
             hwinnwin
           </a>
-          <nav className="hidden md:flex gap-8 text-sm">
+          <nav className="hidden md:flex gap-8 text-sm" aria-label="Main navigation">
             <a href="#ethos" className="text-slate-300 hover:text-slate-100 transition-colors">Ethos</a>
             <a href="#codex" className="text-slate-300 hover:text-slate-100 transition-colors">Codex</a>
             <a href="/hwin" className="text-slate-300 hover:text-slate-100 transition-colors">Work</a>
@@ -83,13 +99,17 @@ export default function Codex() {
             <Button 
               variant="outline" 
               className="bg-transparent border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-slate-100"
+              aria-label="Contact us via email"
             >
-              <Mail className="w-4 h-4 mr-2" />
+              <Mail className="w-4 h-4 mr-2" aria-hidden="true" />
               Contact
             </Button>
           </a>
         </div>
       </header>
+
+      {/* Main Content */}
+      <main id="main-content">
 
       {/* Hero */}
       <motion.section
@@ -179,6 +199,7 @@ export default function Codex() {
           </a>
         </motion.div>
       </motion.section>
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-700/30 bg-[#0A0D1A]">

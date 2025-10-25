@@ -158,6 +158,7 @@ export default function PhotoUpload({ photos, onPhotosChange }: PhotoUploadProps
                   src={URL.createObjectURL(photo)} 
                   alt={`Upload ${index + 1}`}
                   className="w-full h-32 object-cover rounded mb-2"
+                  loading="lazy"
                 />
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground truncate">{photo.name}</span>
