@@ -1,22 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
+import missionContent from "@/content/mission.md?raw";
+import codexContent from "@/content/codex.md?raw";
 
 export default function Codex() {
-  const [missionContent, setMissionContent] = useState("");
-  const [codexContent, setCodexContent] = useState("");
-
-  useEffect(() => {
-    // Load mission and codex markdown files
-    Promise.all([
-      fetch('/src/content/mission.md').then(r => r.text()),
-      fetch('/src/content/codex.md').then(r => r.text())
-    ]).then(([mission, codex]) => {
-      setMissionContent(mission);
-      setCodexContent(codex);
-    });
-  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
