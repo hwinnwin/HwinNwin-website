@@ -4,9 +4,11 @@ import { Post, PostMeta } from '@/types/content';
 // Import all markdown files with ?raw suffix for production builds
 import consciousnessBridgingIntroRaw from '@/content/posts/consciousness-bridging-intro.md?raw';
 import designingWithStateChangeAwarenessRaw from '@/content/posts/designing-with-state-change-awareness.md?raw';
+import lumenAscendsRaw from '@/content/posts/lumen-ascends.md?raw';
 
 // Map of slug to raw markdown content
 const postsMap: Record<string, string> = {
+  'lumen-ascends': lumenAscendsRaw,
   'consciousness-bridging-intro': consciousnessBridgingIntroRaw,
   'designing-with-state-change-awareness': designingWithStateChangeAwarenessRaw,
 };
