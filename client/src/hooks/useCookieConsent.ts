@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CookieConsent, DEFAULT_CONSENT, CONSENT_STORAGE_KEY, CONSENT_VERSION, CookieCategory } from '@/types/cookies';
+import { CookieConsent, DEFAULT_CONSENT, CONSENT_STORAGE_KEY, CONSENT_VERSION, CookieCategory, checkDoNotTrack } from '@/types/cookies';
 
 export interface CookieConsentHook {
   consent: CookieConsent | null;
@@ -24,6 +24,14 @@ export function useCookieConsent(): CookieConsentHook {
         
         // Check if consent version is current
         if (parsed.version === CONSENT_VERSION) {
+          // Enforce Do Not Track if enabled
+          if (checkDoNotTrack()) {
+            parsed.analytics = false;
+            parsed.preferences = false;
+            parsed.marketing = false;
+            // Save enforced DNT state
+            localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(parsed));
+          }
           setConsent(parsed);
           setHasConsented(true);
         } else {
@@ -41,7 +49,7 @@ export function useCookieConsent(): CookieConsentHook {
 
   // Update consent preferences
   const updateConsent = useCallback((newConsent: Partial<CookieConsent>) => {
-    const updatedConsent: CookieConsent = {
+    let updatedConsent: CookieConsent = {
       ...DEFAULT_CONSENT,
       ...consent,
       ...newConsent,
@@ -49,6 +57,13 @@ export function useCookieConsent(): CookieConsentHook {
       timestamp: Date.now(),
       version: CONSENT_VERSION
     };
+
+    // Enforce Do Not Track - override user choices if DNT is enabled
+    if (checkDoNotTrack()) {
+      updatedConsent.analytics = false;
+      updatedConsent.preferences = false;
+      updatedConsent.marketing = false;
+    }
 
     setConsent(updatedConsent);
     setHasConsented(true);
