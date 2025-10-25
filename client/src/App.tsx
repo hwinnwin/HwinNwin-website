@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,6 +12,9 @@ import OwnerDashboard from "@/pages/owner-dashboard";
 import OwnerSettings from "@/pages/owner-settings";
 import ContentEditor from "@/pages/content-editor";
 import PublicQuote from "@/pages/public-quote";
+
+// Codex Homepage
+import Codex from "@/pages/Codex";
 
 // Marketing Pages
 import HomePage from "@/pages/marketing/home";
@@ -29,10 +32,8 @@ import ProjectsPage from "@/pages/projects";
 function Router() {
   return (
     <Switch>
-      {/* Redirect root to HwinNwin marketing site */}
-      <Route path="/">
-        <Redirect to="/hwin" />
-      </Route>
+      {/* Codex/Ethos Homepage */}
+      <Route path="/" component={Codex} />
       
       {/* Projects Page */}
       <Route path="/projects" component={ProjectsPage} />
