@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Shield, BarChart3, Settings, Megaphone } from 'lucide-react';
 import { useCookieConsent } from '@/hooks/useCookieConsent';
-import { COOKIE_CATEGORIES, CookieCategory, CookieConsent, DEFAULT_CONSENT } from '@/types/cookies';
+import { COOKIE_CATEGORIES, CookieCategory, CookieConsent, DEFAULT_CONSENT, checkDoNotTrack } from '@/types/cookies';
 
 interface CookieSettingsModalProps {
   open: boolean;
@@ -24,13 +24,14 @@ interface CookieSettingsModalProps {
 const CATEGORY_ICONS: Record<CookieCategory, React.ReactNode> = {
   essential: <Shield className="w-5 h-5 text-green-600" />,
   analytics: <BarChart3 className="w-5 h-5 text-blue-600" />,
-  functional: <Settings className="w-5 h-5 text-purple-600" />,
+  preferences: <Settings className="w-5 h-5 text-purple-600" />,
   marketing: <Megaphone className="w-5 h-5 text-orange-600" />
 };
 
 export function CookieSettingsModal({ open, onOpenChange }: CookieSettingsModalProps) {
   const { consent, updateConsent, acceptAll, rejectOptional } = useCookieConsent();
   const [localConsent, setLocalConsent] = useState<CookieConsent>(consent || DEFAULT_CONSENT);
+  const isDNT = checkDoNotTrack();
 
   // Update local state when consent changes
   useEffect(() => {
@@ -71,6 +72,11 @@ export function CookieSettingsModal({ open, onOpenChange }: CookieSettingsModalP
           <DialogDescription>
             Manage your cookie preferences. You can enable or disable different types of cookies below.
             Essential cookies cannot be disabled as they are required for the website to function.
+            {isDNT && (
+              <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md text-sm">
+                <strong>Do Not Track detected:</strong> We've disabled non-essential cookies by default.
+              </div>
+            )}
           </DialogDescription>
         </DialogHeader>
 

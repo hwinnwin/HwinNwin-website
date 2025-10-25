@@ -199,7 +199,11 @@ export default function Codex() {
             <div className="flex gap-6">
               <a href="/legal/privacy" className="hover:text-slate-200 transition-colors">Privacy</a>
               <a href="/legal/terms" className="hover:text-slate-200 transition-colors">Terms</a>
-              <button className="hover:text-slate-200 transition-colors" id="manage-cookies-link">
+              <button 
+                onClick={() => window.dispatchEvent(new Event('openCookieSettings'))}
+                className="hover:text-slate-200 transition-colors" 
+                data-testid="link-manage-cookies"
+              >
                 Manage Cookies
               </button>
             </div>
