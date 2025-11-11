@@ -1,11 +1,9 @@
+import React from "react";
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import QuoteForm from "@/components/quote-form";
-import { CheckCircle, Clock, Phone, Mail, MapPin, AlertCircle } from "lucide-react";
-import TopNavigation from "@/components/TopNavigation";
+import { CheckCircle, Clock, AlertCircle, Mail } from "lucide-react";
 
 export default function CustomerForm() {
   const [submissionState, setSubmissionState] = useState<{
@@ -25,129 +23,150 @@ export default function CustomerForm() {
 
   if (submissionState.isSubmitted) {
     return (
-      <div className="min-h-screen bg-background">
-        {/* Top Navigation */}
-        <TopNavigation />
-        
-        {/* Navigation Header */}
-        <nav className="bg-card border-b border-border sticky top-0 z-50 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                  <i className="fas fa-car text-primary-foreground text-lg"></i>
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">Auto Panel Repair</h1>
-                  <p className="text-xs text-muted-foreground">Professional Auto Damage Assessment</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="hidden sm:inline text-sm text-muted-foreground">Need help? Call: (03) 9123 4567</span>
-              </div>
-            </div>
+      <div className="min-h-screen bg-gradient-to-b from-[#0A0D1A] via-[#0E1330] to-[#0A0D1A]">
+        {/* Header */}
+        <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0A0D1A]/80 border-b border-slate-700/30">
+          <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" className="text-2xl font-serif font-bold text-slate-100 hover:text-[#B4FFE7] transition-colors">
+              hwinnwin
+            </a>
+            <nav className="hidden md:flex gap-8 text-sm" aria-label="Main navigation">
+              <a href="/#ethos" className="text-slate-300 hover:text-slate-100 transition-colors">Ethos</a>
+              <a href="/#codex" className="text-slate-300 hover:text-slate-100 transition-colors">Codex</a>
+              <a href="/hwin" className="text-slate-300 hover:text-slate-100 transition-colors">Work</a>
+              <a href="/panel-quote" className="text-slate-100 font-medium">Tools</a>
+            </nav>
+            <a href="mailto:hello@hwinnwin.com">
+              <Button 
+                variant="outline" 
+                className="bg-transparent border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-slate-100"
+                aria-label="Contact us via email"
+              >
+                <Mail className="w-4 h-4 mr-2" aria-hidden="true" />
+                Contact
+              </Button>
+            </a>
           </div>
-        </nav>
+        </header>
 
         {/* Submission Success */}
-        <section className="max-w-2xl mx-auto px-4 py-8">
-          <Card className="shadow-lg border border-border">
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="text-2xl text-green-600" size={32} />
+        <section className="container mx-auto px-6 py-16 max-w-2xl">
+          <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-[#B4FFE7]/10 border border-[#B4FFE7]/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="text-[#B4FFE7]" size={32} />
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">Quote Request Submitted!</h2>
-              <p className="text-muted-foreground mb-6">Thank you for your submission. We're reviewing your damage assessment and will have your quote ready soon.</p>
+              <h2 className="text-3xl font-serif font-bold text-slate-100 mb-3">Quote Request Submitted</h2>
+              <p className="text-lg text-slate-300 mb-8">Your request has been received and is being reviewed.</p>
               
-              <div className="bg-muted rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-center mb-2">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
-                    <Clock className="text-yellow-600" size={20} />
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-10 h-10 bg-[#A7B6FF]/10 border border-[#A7B6FF]/30 rounded-full flex items-center justify-center mr-3">
+                    <Clock className="text-[#A7B6FF]" size={20} />
                   </div>
-                  <span className="font-medium text-foreground">Awaiting Owner Approval</span>
+                  <span className="font-semibold text-slate-200">Awaiting Review</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Your quote is being reviewed by our specialists. You'll receive an email with pricing details once approved.</p>
+                <p className="text-sm text-slate-400">You'll receive confirmation and pricing details via email within 24 hours.</p>
               </div>
 
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p><strong>Reference ID:</strong> <Badge variant="secondary" className="font-mono">{submissionState.quoteId?.slice(0, 8)}</Badge></p>
-                <p><strong>Estimated Response:</strong> Within 24 hours</p>
+              <div className="space-y-3 text-slate-300">
+                <p className="flex items-center justify-center">
+                  <span className="text-slate-400 mr-2">Reference:</span>
+                  <Badge variant="secondary" className="font-mono bg-slate-800 text-[#B4FFE7] border-slate-700">
+                    {submissionState.quoteId?.slice(0, 8)}
+                  </Badge>
+                </p>
                 {submissionState.emailSent && (
-                  <div className="flex items-center justify-center mt-2">
-                    <CheckCircle className="text-green-600 mr-1" size={16} />
-                    <span className="text-green-600">Confirmation email sent</span>
+                  <div className="flex items-center justify-center text-[#B4FFE7]">
+                    <CheckCircle className="mr-2" size={16} />
+                    <span className="text-sm">Confirmation email sent</span>
                   </div>
                 )}
                 {!submissionState.emailSent && (
-                  <div className="flex items-center justify-center mt-2">
-                    <AlertCircle className="text-yellow-600 mr-1" size={16} />
-                    <span className="text-yellow-600">Email service unavailable - please save this reference</span>
+                  <div className="flex items-center justify-center text-[#A7B6FF]">
+                    <AlertCircle className="mr-2" size={16} />
+                    <span className="text-sm">Please save this reference number</span>
                   </div>
                 )}
-                <p><strong>Need help?</strong> Call us at (03) 9123 4567</p>
               </div>
 
               <Button 
                 onClick={() => setSubmissionState({ isSubmitted: false })} 
-                className="mt-6"
+                className="mt-8 bg-[#A7B6FF] text-[#0A0D1A] hover:bg-[#B4FFE7] font-semibold px-6 py-3"
                 data-testid="button-submit-another"
               >
-                Submit Another Quote
+                Submit Another Request
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </section>
 
+        {/* Footer */}
+        <footer className="border-t border-slate-700/30 bg-[#0A0D1A] mt-16">
+          <div className="container mx-auto px-6 py-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-400">
+              <div>© 2025 hwinnwin. All frequencies reserved.</div>
+              <div className="flex gap-6">
+                <a href="/legal/privacy" className="hover:text-slate-200 transition-colors">Privacy</a>
+                <a href="/legal/terms" className="hover:text-slate-200 transition-colors">Terms</a>
+                <button 
+                  onClick={() => window.dispatchEvent(new Event('openCookieSettings'))}
+                  className="hover:text-slate-200 transition-colors"
+                >
+                  Manage Cookies
+                </button>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <TopNavigation />
-      
-      {/* Navigation Header */}
-      <nav className="bg-card border-b border-border sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <i className="fas fa-car text-primary-foreground text-lg"></i>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Auto Panel Repair</h1>
-                <p className="text-xs text-muted-foreground">Professional Auto Damage Assessment</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="hidden sm:inline text-sm text-muted-foreground">Need help? Call: (03) 9123 4567</span>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-[#0A0D1A] via-[#0E1330] to-[#0A0D1A]">
+      {/* Header */}
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0A0D1A]/80 border-b border-slate-700/30">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <a href="/" className="text-2xl font-serif font-bold text-slate-100 hover:text-[#B4FFE7] transition-colors">
+            hwinnwin
+          </a>
+          <nav className="hidden md:flex gap-8 text-sm" aria-label="Main navigation">
+            <a href="/#ethos" className="text-slate-300 hover:text-slate-100 transition-colors">Ethos</a>
+            <a href="/#codex" className="text-slate-300 hover:text-slate-100 transition-colors">Codex</a>
+            <a href="/hwin" className="text-slate-300 hover:text-slate-100 transition-colors">Work</a>
+            <a href="/panel-quote" className="text-slate-100 font-medium">Tools</a>
+          </nav>
+          <a href="mailto:hello@hwinnwin.com">
+            <Button 
+              variant="outline" 
+              className="bg-transparent border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-slate-100"
+              aria-label="Contact us via email"
+            >
+              <Mail className="w-4 h-4 mr-2" aria-hidden="true" />
+              Contact
+            </Button>
+          </a>
         </div>
-      </nav>
+      </header>
 
       {/* Quote Form */}
       <QuoteForm onSubmitted={handleQuoteSubmitted} />
 
       {/* Footer */}
-      <footer className="bg-muted border-t border-border mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mr-2">
-                <i className="fas fa-car text-primary-foreground"></i>
-              </div>
-              <span className="font-semibold text-foreground">Auto Panel Repair</span>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">Professional automotive damage assessment and repair services</p>
-            <div className="flex justify-center space-x-6 text-sm text-muted-foreground">
-              <span className="flex items-center"><Phone className="mr-1" size={16} />(03) 9123 4567</span>
-              <span className="flex items-center"><Mail className="mr-1" size={16} />quotes@panelrepair.com</span>
-              <span className="flex items-center"><MapPin className="mr-1" size={16} />Melbourne, VIC</span>
-            </div>
-            <div className="mt-4 text-xs text-muted-foreground">
-              <p>&copy; 2024 Auto Panel Repair. All rights reserved. | Licensed Motor Vehicle Trader</p>
+      <footer className="border-t border-slate-700/30 bg-[#0A0D1A] mt-16">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-400">
+            <div>© 2025 hwinnwin. All frequencies reserved.</div>
+            <div className="flex gap-6">
+              <a href="/legal/privacy" className="hover:text-slate-200 transition-colors">Privacy</a>
+              <a href="/legal/terms" className="hover:text-slate-200 transition-colors">Terms</a>
+              <button 
+                onClick={() => window.dispatchEvent(new Event('openCookieSettings'))}
+                className="hover:text-slate-200 transition-colors"
+              >
+                Manage Cookies
+              </button>
             </div>
           </div>
         </div>
