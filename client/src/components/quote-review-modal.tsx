@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -105,17 +105,7 @@ export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteRevi
 
   const { data: quote, isLoading } = useQuery<Quote>({
     queryKey: ['/api/quote', quoteId],
-    enabled: isOpen && !!quoteId,
-    onSuccess: (data) => {
-      if (data) {
-        setItems(data.items);
-        form.reset({
-          items: data.items,
-          rates: data.rates,
-          ownerNotes: data.ownerNotes || ""
-        });
-      }
-    }
+    enabled: isOpen && !!quoteId
   });
 
   const form = useForm<ReviewFormData>({
@@ -133,6 +123,18 @@ export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteRevi
       ownerNotes: ""
     }
   });
+
+  // Update form when quote data is loaded
+  useEffect(() => {
+    if (quote) {
+      setItems(quote.items);
+      form.reset({
+        items: quote.items,
+        rates: quote.rates,
+        ownerNotes: quote.ownerNotes || ""
+      });
+    }
+  }, [quote, form]);
 
   const rates = form.watch('rates');
   const calculation = useQuoteCalculation(items, quote?.vehiclePaint || 'metallic', rates);

@@ -1,15 +1,20 @@
 name: HwinNwin
-tagline: Helping Businesses Scale with Structure, Mindset, and Excellence
-pillars: [Power, Balance, Prosperity]
+tagline: Consciousness-Based Business Systems Using The HURTZ Framework™
+pillars: [Power (TungstenHURTZ), Balance (TungstenGiggle), Prosperity (GiggleHURTZ)]
 voice:
-  tone: warm, calm confidence; outcome-first; short sentences
+  tone: warm, calm confidence; outcome-first; short sentences; TungstenGiggle oscillation
   rules:
     - Always spell brand as "HwinNwin"
     - Use AUD for prices
-    - Use gold accents sparingly (prosperity moments)
+    - Use HURTZ language (TungstenHURTZ, GiggleHURTZ, TungstenGiggle Protocol)
+    - Tungsten = execution/precision, Giggle = creation/joy
     - Prefer plain English over jargon
+methodology:
+  name: "The HURTZ Language System™"
+  tagline: "Where Frequency Meets Business Performance"
+  description: "Proprietary framework combining TungstenHURTZ (precision execution) with GiggleHURTZ (joyful creation)"
 organization:
   legal_name: HwinNwin Pty Ltd
   hq: Melbourne, Australia
-  email_public: "REPLACE_ME_PUBLIC_EMAIL"
-  booking_link: "REPLACE_ME_CAL_COM_LINK"
+  email_public: "hello@hwinnwin.com"
+  booking_link: "https://cal.com/hwinnwin"
