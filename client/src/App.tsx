@@ -83,7 +83,7 @@ function Router() {
       </Route>
       
       {/* Legal Pages */}
-      <Route path="/legal/:type" component={LegalPage} />
+      <Route path="/hwin/legal/:type" component={LegalPage} />
       
       {/* Dynamic Custom Pages - Must come after all specific routes */}
       <Route path="/:slug" component={DynamicPage} />
