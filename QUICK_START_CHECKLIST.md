@@ -66,7 +66,44 @@ booking_link: "https://cal.com/yourname/30min"  # Your booking link
 
 ## 🟡 HIGH PRIORITY (Do This Week - 8-10 hours)
 
-### 4. Security Patch ✅
+### 4. Add HURTZ Framework Page ✅
+**Why:** This is your secret weapon - unique IP no competitor has  
+**Time:** 6-8 hours
+
+- [ ] Create `/hwin/hurtz` page explaining the framework
+- [ ] Add TungstenHURTZ™ and GiggleHURTZ™ sections
+- [ ] Include The TungstenGiggle Protocol™
+- [ ] Add business applications and use cases
+- [ ] Design with frequency-based colors (steel grey + electric blue, golden yellow + magenta)
+- [ ] Add CTA for HURTZ assessment or workshop inquiry
+
+**Page Structure:**
+```
+# The HURTZ Language System™
+- Introduction and overview
+- TungstenHURTZ: Execution & Precision (432-528 Hz)
+- GiggleHURTZ: Creation & Joy (528-999 Hz)
+- The TungstenGiggle Protocol: Optimal Performance
+- How We Use HURTZ in Consulting
+- Get Started (download framework guide, book call)
+```
+
+**Why This Matters:**
+- No other consultancy has this framework
+- Creates thought leadership position
+- Foundation for 20+ blog posts
+- Lead generation through unique methodology
+- Premium positioning justification
+
+**Files to Create:**
+- `client/src/pages/marketing/hurtz.tsx`
+- Add route in `client/src/App.tsx`
+
+**See:** `HURTZ_INTEGRATION_PLAN.md` for complete strategy
+
+---
+
+### 5. Security Patch ✅
 **Why:** 8 vulnerabilities need fixing  
 **Time:** 1 hour
 
@@ -82,16 +119,21 @@ npm audit fix --force  # Only if safe
 
 ---
 
-### 5. Add 5 Blog Posts ✅
-**Why:** SEO needs content, you currently have only 2 posts  
+### 6. Add 5 HURTZ-Focused Blog Posts ✅
+**Why:** SEO needs content, you currently have only 2 posts, HURTZ is your differentiator  
 **Time:** 5-6 hours (1 hour per post)
 
-**Suggested Topics:**
+**Prioritize HURTZ Topics:**
+- [ ] "Introducing HURTZ: The Language of Conscious Business"
+- [ ] "TungstenHURTZ: When Your Team Needs Execution Mode"
+- [ ] "GiggleHURTZ: Why Joy is Your Competitive Advantage"
+- [ ] "The TungstenGiggle Protocol: Optimal Performance Rhythm"
+- [ ] "Are You Tungsten-Heavy? The Corporate Burnout Pattern"
+
+**Also Consider:**
 - [ ] "AI Automation ROI: What Australian SMBs Should Expect"
-- [ ] "5 Signs Your Business Needs Process Automation"
 - [ ] "Building vs Buying: AI Systems Decision Framework"
 - [ ] "Creative Systems That Actually Scale"
-- [ ] "Data Dashboards That Decision-Makers Actually Use"
 
 **Template for Each Post:**
 1. Problem statement (2 paragraphs)
@@ -118,26 +160,25 @@ Your content here...
 
 ---
 
-### 6. Add Lead Magnet ✅
-**Why:** Capture emails for nurture sequences  
-**Time:** 2 hours
+### 7. Add HURTZ Lead Magnet ✅
+**Why:** Capture emails for nurture sequences with unique framework offer  
+**Time:** 3 hours
 
-- [ ] Create "AI Readiness Checklist" PDF
-- [ ] Add download form to website
-- [ ] Set up email capture workflow
-- [ ] Create thank you page with next steps
+**Priority Lead Magnet:**
+- [ ] Create "The HURTZ Assessment: What's Your Frequency?" quiz
+- [ ] 10 questions assessing Tungsten vs Giggle balance
+- [ ] Results show frequency profile with recommendations
+- [ ] Generate PDF report automatically
+- [ ] CTA to book frequency alignment consultation
 
-**Checklist Content Ideas:**
-- Process documentation status
-- Data quality assessment  
-- Team readiness evaluation
-- Budget planning guide
-- Timeline expectations
-- Recommended first steps
+**Alternative Lead Magnets:**
+- [ ] "HURTZ Communication Playbook" (email templates, meeting scripts)
+- [ ] "The TungstenGiggle Protocol™ Wallchart" (printable workflow)
+- [ ] "AI Readiness Checklist" (traditional but still useful)
 
 ---
 
-### 7. Setup Analytics ✅
+### 8. Setup Analytics ✅
 **Why:** Can't improve what you don't measure  
 **Time:** 1 hour
 
@@ -158,19 +199,21 @@ Your content here...
 
 ## 🟢 IMPORTANT (Do Next Week)
 
-### 8. Create Pricing Page ✅
-- [ ] Define clear service packages
+### 9. Create HURTZ-Enhanced Pricing Page ✅
+- [ ] Add "HURTZ Methodology Training" as service offering
+- [ ] Add "HURTZ-Powered Consulting" package
+- [ ] Define clear service packages including HURTZ
 - [ ] Add `/hwin/pricing` route
 - [ ] Create pricing comparison table
-- [ ] Add FAQ about pricing
+- [ ] Add FAQ about HURTZ and pricing
 
-### 9. Add 2 More Case Studies ✅
-- [ ] Write detailed client success stories
-- [ ] Include metrics and results
-- [ ] Add client testimonials
-- [ ] Include before/after diagrams
+### 10. Add 2 HURTZ Case Studies ✅
+- [ ] "From Burnout to Breakthrough: Rebalancing a Tungsten-Heavy Startup"
+- [ ] "Giggle to Tungsten: Getting a Creative Agency to Ship"
+- [ ] Include HURTZ frequency tags and methodology
+- [ ] Show before/after frequency profiles
 
-### 10. Performance Optimization ✅
+### 11. Performance Optimization ✅
 - [ ] Optimize images (convert to WebP)
 - [ ] Add lazy loading
 - [ ] Test mobile performance
@@ -204,21 +247,23 @@ Create a GitHub Project board or use this simple markdown tracker:
 - ✅ Working website that builds without errors
 - ✅ Functional contact form that sends emails
 - ✅ Professional appearance (no placeholders)
-- ✅ 5+ blog posts for SEO
+- ✅ HURTZ framework page live (your unique differentiator!)
+- ✅ 3-5 HURTZ blog posts for SEO
 - ✅ Analytics tracking visitors
 
 **After Week 2, you should have:**
-- ✅ 7-10 total blog posts
-- ✅ Lead magnet capturing emails
-- ✅ Clear pricing information
-- ✅ 5+ case studies showing proof
+- ✅ 7-10 total blog posts (mostly HURTZ-focused)
+- ✅ HURTZ Assessment lead magnet capturing emails
+- ✅ HURTZ-enhanced pricing information
+- ✅ 2-3 HURTZ case studies showing proof
 - ✅ Data showing traffic and conversions
 
-**Expected Outcomes:**
-- 🎯 3-5 contact form inquiries per week (up from 0)
-- 🎯 50-100 website visitors per week (from organic search)
-- 🎯 10-20 email subscribers per month
-- 🎯 1-2 qualified sales conversations per month
+**Expected Outcomes (with HURTZ positioning):**
+- 🎯 5-10 contact form inquiries per week (unique methodology attracts interest)
+- 🎯 100-200 website visitors per week (HURTZ content ranks well)
+- 🎯 20-40 email subscribers per month (HURTZ Assessment conversions)
+- 🎯 2-4 qualified sales conversations per month (premium positioning)
+- 🎯 Thought leadership recognition (no one else has HURTZ)
 
 ---
 
