@@ -35,9 +35,9 @@ export default function Footer() {
     {
       title: "Legal",
       links: [
-        { href: "/legal/privacy", label: "Privacy Policy" },
-        { href: "/legal/terms", label: "Terms of Service" },
-        { href: "/legal/cookies", label: "Cookie Policy" },
+        { href: "/hwin/legal/privacy", label: "Privacy Policy" },
+        { href: "/hwin/legal/terms", label: "Terms of Service" },
+        { href: "/hwin/legal/cookies", label: "Cookie Policy" },
       ]
     }
   ];

@@ -14,7 +14,8 @@ import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, first
 import { hashPin, comparePin, isPinHashed } from "./services/pinService";
 import { generateOTPRecord, verifyOTP, isOTPExpired, clearOTPData, isValidOTPFormat } from "./services/otpService";
 import { registerContactRoutes } from "./routes/contact";
-import { z } from "zod";
+import { getAllCaseStudies, getCaseStudy, getAllBlogPosts, getBlogPost } from "./services/contentService";
+import { z, ZodError } from "zod";
 import fs from "fs/promises";
 import matter from "gray-matter";
 
@@ -284,6 +285,7 @@ Sitemap: ${baseUrl}/sitemap.xml`);
     }
   });
 
+
   // Marketing Routes with Server-Side Meta Tag Injection
   // Home page
   app.get('/hwin', async (req, res) => {
@@ -404,100 +406,81 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   // Content API endpoints for MDX processing
   app.get('/api/content/case-studies', async (req, res) => {
     try {
-      const caseStudySlugs = ['ops-time-cut', 'content-pipeline', 'sales-enablement'];
-      const caseStudies = [];
-
-      for (const slug of caseStudySlugs) {
-        try {
-          const filePath = path.join(process.cwd(), 'content', 'case-studies', `${slug}.mdx`);
-          const fileContent = await fs.readFile(filePath, 'utf-8');
-          const { data, content } = matter(fileContent);
-          
-          caseStudies.push({
-            slug,
-            frontmatter: data,
-            content
-          });
-        } catch (error) {
-          console.error(`Error loading case study ${slug}:`, error);
-          // Continue with other case studies
-        }
-      }
-
+      const caseStudies = await getAllCaseStudies();
+      
+      const latestMod = caseStudies.length > 0 
+        ? Math.max(...caseStudies.map(s => s.lastModified || 0))
+        : 0;
+      const etag = `"case-studies-${latestMod}"`;
+      
+      res.set('Cache-Control', 'public, max-age=300');
+      res.set('ETag', etag);
       res.json(caseStudies);
     } catch (error) {
       console.error('Error loading case studies:', error);
-      res.status(500).json({ message: 'Failed to load case studies' });
+      res.status(500).json({ error: 'Failed to load case studies' });
     }
   });
 
   app.get('/api/content/case-studies/:slug', async (req, res) => {
     try {
-      const { slug } = req.params;
-      const filePath = path.join(process.cwd(), 'content', 'case-studies', `${slug}.mdx`);
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      const { data, content } = matter(fileContent);
+      const slug = z.string().regex(/^[a-z0-9-]+$/).parse(req.params.slug);
+      const caseStudy = await getCaseStudy(slug);
       
-      res.json({
-        slug,
-        frontmatter: data,
-        content
-      });
+      if (!caseStudy) {
+        return res.status(404).json({ error: 'Case study not found' });
+      }
+      
+      const etag = `"${slug}-${caseStudy.lastModified || 0}"`;
+      res.set('Cache-Control', 'public, max-age=300');
+      res.set('ETag', etag);
+      res.json(caseStudy);
     } catch (error) {
-      console.error(`Error loading case study ${req.params.slug}:`, error);
-      res.status(404).json({ message: 'Case study not found' });
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: 'Invalid slug format' });
+      }
+      console.error('Error loading case study:', error);
+      res.status(500).json({ error: 'Failed to load case study' });
     }
   });
 
   app.get('/api/content/blog', async (req, res) => {
     try {
-      const blogSlugs = ['small-systems-win', 'three-p-check'];
-      const blogPosts = [];
-
-      for (const slug of blogSlugs) {
-        try {
-          const filePath = path.join(process.cwd(), 'content', 'blog', `${slug}.mdx`);
-          const fileContent = await fs.readFile(filePath, 'utf-8');
-          const { data, content } = matter(fileContent);
-          
-          blogPosts.push({
-            slug,
-            frontmatter: data,
-            content
-          });
-        } catch (error) {
-          console.error(`Error loading blog post ${slug}:`, error);
-          // Continue with other posts
-        }
-      }
-
-      // Sort by date (newest first)
-      blogPosts.sort((a, b) => 
-        new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime()
-      );
-
+      const blogPosts = await getAllBlogPosts();
+      
+      const latestMod = blogPosts.length > 0 
+        ? Math.max(...blogPosts.map(p => p.lastModified || 0))
+        : 0;
+      const etag = `"blog-${latestMod}"`;
+      
+      res.set('Cache-Control', 'public, max-age=300');
+      res.set('ETag', etag);
       res.json(blogPosts);
     } catch (error) {
       console.error('Error loading blog posts:', error);
-      res.status(500).json({ message: 'Failed to load blog posts' });
+      res.status(500).json({ error: 'Failed to load blog posts' });
     }
   });
 
   app.get('/api/content/blog/:slug', async (req, res) => {
     try {
-      const { slug } = req.params;
-      const filePath = path.join(process.cwd(), 'content', 'blog', `${slug}.mdx`);
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      const { data, content } = matter(fileContent);
+      const slug = z.string().regex(/^[a-z0-9-]+$/).parse(req.params.slug);
+      const blogPost = await getBlogPost(slug);
       
-      res.json({
-        slug,
-        frontmatter: data,
-        content
-      });
+      if (!blogPost) {
+        return res.status(404).json({ error: 'Blog post not found' });
+      }
+      
+      const etag = `"${slug}-${blogPost.lastModified || 0}"`;
+      res.set('Cache-Control', 'public, max-age=300');
+      res.set('ETag', etag);
+      res.json(blogPost);
     } catch (error) {
-      console.error(`Error loading blog post ${req.params.slug}:`, error);
-      res.status(404).json({ message: 'Blog post not found' });
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: 'Invalid slug format' });
+      }
+      console.error('Error loading blog post:', error);
+      res.status(500).json({ error: 'Failed to load blog post' });
     }
   });
 
