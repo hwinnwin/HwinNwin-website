@@ -10,10 +10,14 @@ import { SeoHead } from "@/components/seo/SeoHead";
 import { SITE_CONFIG } from "@/lib/constants";
 
 export default function BlogPage() {
-  const { data: blogPosts, isLoading } = useQuery({
+  console.log('[BlogPage] Component rendering');
+  
+  const { data: blogPosts, isLoading, error } = useQuery({
     queryKey: ["blog-posts"],
     queryFn: getAllBlogPosts,
   });
+  
+  console.log('[BlogPage] Query state:', { isLoading, error, dataLength: blogPosts?.length });
 
   if (isLoading) {
     return (
@@ -21,6 +25,58 @@ export default function BlogPage() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-pulse text-gold">Loading insights...</div>
         </div>
+      </MarketingLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MarketingLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="text-red-600 dark:text-red-400 text-lg">Failed to load blog posts</div>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </div>
+        </div>
+      </MarketingLayout>
+    );
+  }
+
+  const validBlogPosts = Array.isArray(blogPosts) ? blogPosts : [];
+
+  if (validBlogPosts.length === 0 && !isLoading) {
+    return (
+      <MarketingLayout>
+        {/* SEO */}
+        <SeoHead 
+          title="Insights & Ideas - Business Strategy Blog | HwinNwin"
+          description="Practical business wisdom for scaling your company. Short insights with real impact from Melbourne's leading business consultants. Structure, mindset, excellence."
+          ogTitle="Business Insights & Strategy Blog | HwinNwin"
+          ogDescription="Practical wisdom for scaling your business. Short insights. Real impact. Business strategy and consulting advice from Melbourne experts."
+          canonicalUrl={`${SITE_CONFIG.baseUrl}/hwin/insights`}
+          keywords={['business insights', 'strategy blog', 'consulting advice', 'scaling business', 'Melbourne business', 'practical wisdom']}
+        />
+        {/* Hero Section */}
+        <section className="py-20 lg:py-32 bg-gradient-to-b from-background to-muted/20" data-testid="blog-hero">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto text-center space-y-8">
+              <h1 className="text-4xl lg:text-6xl font-bold text-charcoal dark:text-hwin-white leading-tight" data-testid="blog-headline">
+                Insights & Ideas
+              </h1>
+              
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto" data-testid="blog-subtitle">
+                Practical wisdom for scaling your business. Short insights. Real impact.
+              </p>
+            </div>
+          </div>
+        </section>
+        <section className="py-16 lg:py-24">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center text-muted-foreground">
+              No blog posts available yet.
+            </div>
+          </div>
+        </section>
       </MarketingLayout>
     );
   }
@@ -63,7 +119,7 @@ export default function BlogPage() {
       <section className="py-16 lg:py-24" data-testid="blog-posts-grid">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {blogPosts?.map((post, index) => (
+            {validBlogPosts.map((post, index) => (
               <Card key={index} className="hover:shadow-soft transition-shadow group" data-testid={`blog-post-card-${index}`}>
                 <CardHeader>
                   <div className="space-y-3">
