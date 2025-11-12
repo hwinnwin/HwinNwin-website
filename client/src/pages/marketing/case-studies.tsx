@@ -10,16 +10,57 @@ import { SeoHead } from "@/components/seo/SeoHead";
 import { SITE_CONFIG } from "@/lib/constants";
 
 export default function CaseStudiesPage() {
-  const { data: caseStudies, isLoading } = useQuery({
+  console.log('[CaseStudies] Component mounting/rendering');
+  
+  const { data: caseStudies, isLoading, error } = useQuery({
     queryKey: ["case-studies"],
     queryFn: getAllCaseStudies,
   });
+  
+  console.log('[CaseStudies] Query state:', { 
+    isLoading, 
+    error: error ? String(error) : null, 
+    dataLength: caseStudies?.length,
+    hasData: !!caseStudies 
+  });
 
   if (isLoading) {
+    console.log('[CaseStudies] Showing loading state');
     return (
       <MarketingLayout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-pulse text-gold">Loading...</div>
+        </div>
+      </MarketingLayout>
+    );
+  }
+
+  if (error) {
+    console.error('[CaseStudies] Error state:', error);
+    return (
+      <MarketingLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-red-500">
+            <h2 className="text-2xl font-bold mb-4">Error Loading Case Studies</h2>
+            <p>{error instanceof Error ? error.message : 'Unknown error occurred'}</p>
+          </div>
+        </div>
+      </MarketingLayout>
+    );
+  }
+
+  console.log('[CaseStudies] Rendering main content with', caseStudies?.length, 'case studies');
+
+  // Additional safety check
+  if (!caseStudies || !Array.isArray(caseStudies)) {
+    console.error('[CaseStudies] No case studies data or invalid format:', caseStudies);
+    return (
+      <MarketingLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-muted-foreground">
+            <h2 className="text-2xl font-bold mb-4">No Case Studies Available</h2>
+            <p>Check back soon for our latest work.</p>
+          </div>
         </div>
       </MarketingLayout>
     );
@@ -55,7 +96,8 @@ export default function CaseStudiesPage() {
       <section className="py-16 lg:py-24" data-testid="case-studies-grid">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {caseStudies?.map((caseStudy, index) => {
+            {caseStudies.map((caseStudy, index) => {
+              console.log('[CaseStudies] Rendering card', index, caseStudy.slug);
               const slug = caseStudy.slug;
               
               return (

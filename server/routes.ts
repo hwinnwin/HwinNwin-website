@@ -434,7 +434,10 @@ Sitemap: ${baseUrl}/sitemap.xml`);
       const etag = `"${slug}-${caseStudy.lastModified || 0}"`;
       res.set('Cache-Control', 'public, max-age=300');
       res.set('ETag', etag);
-      res.json(caseStudy);
+      res.json({
+        ...caseStudy,
+        slug
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: 'Invalid slug format' });
@@ -474,7 +477,10 @@ Sitemap: ${baseUrl}/sitemap.xml`);
       const etag = `"${slug}-${blogPost.lastModified || 0}"`;
       res.set('Cache-Control', 'public, max-age=300');
       res.set('ETag', etag);
-      res.json(blogPost);
+      res.json({
+        ...blogPost,
+        slug
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: 'Invalid slug format' });
