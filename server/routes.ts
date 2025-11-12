@@ -122,7 +122,7 @@ Sitemap: ${baseUrl}/sitemap.xml`);
       const baseUrl = process.env.BASE_URL || 'https://hwinnwin.com';
       
       // Static marketing pages
-      const staticPages = [
+      const staticPages: Array<{ url: string; priority: string; lastmod?: string }> = [
         { url: '/', priority: '1.0' },
         { url: '/hwin', priority: '1.0' },
         { url: '/hwin/services', priority: '0.9' },
@@ -133,7 +133,7 @@ Sitemap: ${baseUrl}/sitemap.xml`);
       ];
 
       // Read case studies dynamically
-      const caseStudies: { url: string; priority: string; lastmod?: string }[] = [];
+      const caseStudies: Array<{ url: string; priority: string; lastmod?: string }> = [];
       try {
         const caseStudiesDir = path.join(process.cwd(), 'content', 'case-studies');
         const caseStudyFiles = await fs.readdir(caseStudiesDir);
@@ -156,7 +156,7 @@ Sitemap: ${baseUrl}/sitemap.xml`);
       }
 
       // Read blog posts dynamically
-      const blogPosts: { url: string; priority: string; lastmod?: string }[] = [];
+      const blogPosts: Array<{ url: string; priority: string; lastmod?: string }> = [];
       try {
         const blogDir = path.join(process.cwd(), 'content', 'blog');
         const blogFiles = await fs.readdir(blogDir);

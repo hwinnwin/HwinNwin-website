@@ -19,6 +19,7 @@ import BlogPage from "@/pages/marketing/blog";
 import BlogPostPage from "@/pages/marketing/blog-post";
 import ContactPage from "@/pages/marketing/contact";
 import LegalPage from "@/pages/marketing/legal";
+import HURTZPage from "@/pages/marketing/hurtz";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function Router() {
       
       {/* Marketing Website Routes */}
       <Route path="/hwin" component={HomePage} />
+      <Route path="/hwin/hurtz" component={HURTZPage} />
       <Route path="/hwin/services" component={ServicesPage} />
       <Route path="/hwin/about" component={AboutPage} />
       <Route path="/hwin/work" component={CaseStudiesPage} />

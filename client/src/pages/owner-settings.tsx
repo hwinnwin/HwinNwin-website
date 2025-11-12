@@ -62,6 +62,7 @@ interface Settings {
   primaryColor: string;
   fromEmail: string;
   siteUrl: string;
+  sendgridApiKey?: string;
 }
 
 export default function OwnerSettings() {
