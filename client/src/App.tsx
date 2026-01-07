@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CookieConsentBanner } from "@/components/cookie-consent";
 import { ConditionalAnalytics } from "@/components/ConditionalAnalytics";
+import { I18nProvider } from "@/i18n/context";
 import NotFound from "@/pages/not-found";
 import CustomerForm from "@/pages/customer-form";
 import OwnerDashboard from "@/pages/owner-dashboard";
@@ -14,7 +15,8 @@ import OwnerSettings from "@/pages/owner-settings";
 import ContentEditor from "@/pages/content-editor";
 import PublicQuote from "@/pages/public-quote";
 
-// Codex Homepage
+// Codex Homepage (with i18n support)
+import CodexI18n from "@/pages/CodexI18n";
 import Codex from "@/pages/Codex";
 
 // Marketing Pages
@@ -40,8 +42,11 @@ const ContactPage = lazy(() => import("@/pages/Contact"));
 function Router() {
   return (
     <Switch>
-      {/* Codex/Ethos Homepage */}
-      <Route path="/" component={Codex} />
+      {/* Codex/Ethos Homepage - with i18n support (Vietnamese, Chinese, English) */}
+      <Route path="/" component={CodexI18n} />
+
+      {/* Legacy Codex route (English only) */}
+      <Route path="/codex-legacy" component={Codex} />
       
       {/* Projects Page */}
       <Route path="/projects" component={ProjectsPage} />
@@ -96,18 +101,20 @@ function Router() {
 
 function App() {
   console.log("🚀 App component rendering...");
-  
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <ErrorBoundary>
-            <Router />
-            <CookieConsentBanner />
-            <ConditionalAnalytics />
-          </ErrorBoundary>
-        </TooltipProvider>
+        <I18nProvider>
+          <TooltipProvider>
+            <Toaster />
+            <ErrorBoundary>
+              <Router />
+              <CookieConsentBanner />
+              <ConditionalAnalytics />
+            </ErrorBoundary>
+          </TooltipProvider>
+        </I18nProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
