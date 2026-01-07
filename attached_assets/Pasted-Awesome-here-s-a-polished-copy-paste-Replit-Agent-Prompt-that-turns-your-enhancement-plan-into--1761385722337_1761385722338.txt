@@ -1,0 +1,260 @@
+Awesome—here’s a polished, copy-paste **Replit Agent Prompt** that turns your enhancement plan into clear, safe, step-by-step actions. It’s scoped, reversible, and won’t break existing tools.
+
+---
+
+## Replit Agent Prompt — “Enhancement Pack v1” (copy-paste)
+
+**Goal:** Ship high-impact enhancements without destabilising current features. Implement Phase 1: **Analytics (privacy-first + consent-gated)**, **Contact/Lead capture**, **Blog/Content system**, plus **SEO/OG** and **Performance** basics.
+
+**Hard constraints (do not violate):**
+
+* Do **not** modify: Auto Quoter logic (`/panel-quote`), Owner Dashboard logic (`/owner`), auth, or deployment configs.
+* Do **not** re-introduce the old top nav row; keep current second-row nav with **Auto Quoter** after **Case Studies**.
+* Keep React imports standard (`import React from "react"`).
+* Respect cookie consent: **no analytics/marketing loads before opt-in**.
+
+---
+
+### 0) Pre-flight
+
+1. If deployment is suspended, **surface the billing/resume notice and stop**. Do not change code.
+2. Confirm routes still resolve:
+
+   * `/` (Codex/Ethos homepage)
+   * `/hwin` (marketing legacy)
+   * `/panel-quote`
+   * `/owner` (PIN 6043)
+
+---
+
+### 1) Privacy-first Analytics (Plausible, consent-gated)
+
+**Files to add:**
+
+* `client/src/lib/analytics/plausible.ts`
+* `client/src/lib/cookies/consent.ts` (use or extend existing if present)
+* `client/src/hooks/useConsent.ts`
+
+**Implement:**
+
+* Add env toggle: `VITE_ANALYTICS_PROVIDER="plausible"`, `VITE_PLAUSIBLE_DOMAIN="hwinnwin.com"` (or the current domain).
+* In `plausible.ts`, export:
+
+  * `loadPlausible(domain: string)` → inject `<script async defer data-domain="..." src="https://plausible.io/js/script.js">`.
+  * `track(event: string, props?: Record<string, any>)`.
+* In `consent.ts`:
+
+  * `getConsent()`, `setConsent()`, `onConsentChange(cb)`, `CONSENT_VERSION = "2025.10.25.v1"`.
+  * Categories: `essential` (locked true), `preferences`, `analytics`, `marketing`. Persist to `localStorage: cookiePreferences`.
+  * If `navigator.doNotTrack === "1"`, force non-essential false.
+* In app bootstrap (`client/src/main.tsx` or equivalent):
+
+  ```ts
+  import { getConsent, onConsentChange } from "@/lib/cookies/consent";
+  import { loadPlausible } from "@/lib/analytics/plausible";
+
+  function maybeInitAnalytics() {
+    const prefs = getConsent();
+    if (prefs?.analytics) {
+      const domain = import.meta.env.VITE_PLAUSIBLE_DOMAIN;
+      if (domain) loadPlausible(domain);
+    }
+  }
+
+  maybeInitAnalytics();
+  onConsentChange(() => window.location.reload());
+  ```
+* **QA**: On first load, no analytics script present. After user opts into “Analytics” in cookie modal, script appears on next navigation/reload.
+
+---
+
+### 2) Contact & Lead Capture (with email notifications)
+
+**Files to add:**
+
+* `client/src/components/forms/ContactForm.tsx`
+* `client/src/pages/Contact.tsx`
+* `server/routes/contact.ts` (or equivalent serverless handler)
+* `client/src/lib/email/send.ts`
+
+**Implement:**
+
+* **Form fields:** name, email, message, consent checkbox (“I agree to be contacted…”).
+* **Validation:** Required fields, basic email regex, 1 honeypot field named `website` (must stay empty).
+* **Server handler:** Use existing email infra (SendGrid if available). Env keys:
+
+  * `SENDGRID_API_KEY`
+  * `EMAIL_TO` (owner inbox)
+  * `EMAIL_FROM` (verified sender)
+* **Client:** POST JSON to `/api/contact`. On success: show success state; on error: friendly error + retry.
+* **Add routes & nav:** Add `/contact` route; add footer link “Contact”.
+* **QA:** Submitting sends owner email + 200 response; errors handled gracefully; spam honeypot blocks bots.
+
+---
+
+### 3) Blog / Content System (Markdown-based, lightweight)
+
+**Files to add:**
+
+* `client/src/content/posts/*.md` (seed with 2 posts)
+* `client/src/lib/mdx/loader.ts` (or markdown parser)
+* `client/src/pages/blog/BlogIndex.tsx`
+* `client/src/pages/blog/BlogPost.tsx`
+* `client/src/types/content.ts` (`PostMeta` interface: `slug`, `title`, `date`, `tags`, `excerpt`, `ogImage`)
+
+**Implement:**
+
+* Simple filesystem loader that:
+
+  * Reads frontmatter for meta.
+  * Exposes `listPosts()` (sorted by date desc) and `getPost(slug)`.
+* Routes:
+
+  * `/blog` → `BlogIndex` with cards (title, date, excerpt)
+  * `/blog/:slug` → `BlogPost` (render markdown)
+* **Seed posts:**
+
+  * `consciousness-bridging-intro.md`
+  * `designing-with-state-change-awareness.md`
+* **QA:** Index lists posts; deep links render; 404 fallback if slug missing.
+
+---
+
+### 4) SEO, Sitemap, robots.txt, OG/Twitter Cards
+
+**Files to add:**
+
+* `client/public/robots.txt`
+* `client/public/sitemap.xml` (build-time generated if you prefer; static acceptable for now)
+* `client/src/lib/seo/meta.tsx` → `<SEO title desc ogImage />` component
+* Update root HTML template to include dynamic meta injection where supported.
+
+**Implement:**
+
+* Default `<title>HwinNwin — Conscious Tech & Design</title>`.
+* Per-page SEO via `<SEO />` props; Blog posts use post meta for OG image, description, canonical.
+* robots: allow `/*`, disallow sensitive admin paths if any.
+* sitemap: include `/`, `/hwin`, `/panel-quote`, `/blog`, `/contact`, `/case-studies` (if present), and seeded posts with ISO dates.
+
+---
+
+### 5) Performance Basics
+
+**Implement:**
+
+* **Image lazy-loading:** add `loading="lazy"` to non-critical images/components.
+* **Route-based code splitting:** lazy-load blog routes and contact page:
+
+  ```ts
+  const BlogIndex = React.lazy(() => import("@/pages/blog/BlogIndex"));
+  const BlogPost  = React.lazy(() => import("@/pages/blog/BlogPost"));
+  const Contact   = React.lazy(() => import("@/pages/Contact"));
+  ```
+* **Preload critical assets:** Add `<link rel="preload" as="font"...>` for key fonts; keep under budget.
+* **Cache busting:** bump `APP_BUILD="2025.10.25"` (used as query suffix on main bundle).
+
+---
+
+### 6) Accessibility & UX Quick Wins
+
+* Ensure all interactive elements have `aria-label` or visible text.
+* Keyboard focus ring preserved; skip-to-content link at top.
+* Color contrast check for Codex indigo sections (WCAG AA).
+* Add “Manage Cookies” footer link that reopens consent modal.
+
+---
+
+### 7) Owner Insights (lightweight for now)
+
+* In Owner Dashboard, add a readonly “Signals” panel that shows:
+
+  * Pageviews (if analytics enabled) → defer to Plausible API later (no external calls now).
+  * Contact submissions (count from server since last 7/30 days).
+* **Do not** add heavy charts yet; just counts and last 5 submissions (name, date, link to email id if available).
+
+---
+
+### 8) QA Checklist (must pass before commit)
+
+* **Consent:** No analytics before opt-in; enabling Analytics loads Plausible; toggles persist; DNT disables.
+* **Contact:** Form validates; honeypot blocks spam; email received; errors friendly.
+* **Blog:** Index and post pages render; meta tags correct; OG/Twitter show right previews (view page source).
+* **SEO:** `robots.txt` and `sitemap.xml` available; titles and descriptions set per page.
+* **Perf:** Non-critical images lazy-load; blog/contact routes lazy-loaded.
+* **A11y:** Keyboard navigation works; focus visible; color contrast ≥ AA.
+* **Stability:** No white screen; error-recovery remains in place.
+
+---
+
+### 9) Version Control
+
+Create **one** commit with only the files above.
+
+**Commit message:**
+
+```
+feat(site): Phase 1 enhancements — privacy-first analytics (consent-gated), contact form, markdown blog, SEO/OG, perf & a11y basics
+```
+
+Push to GitHub.
+
+---
+
+### 10) Deliverables
+
+* List of changed/added files (paths).
+* Short validation log referencing the **QA Checklist** above with ✅/❌ status and notes.
+* If deployment was suspended, include the surfaced notice and stop without code changes.
+
+---
+
+## Snippets to use verbatim where applicable
+
+**Consent guard (example use anywhere you need it):**
+
+```ts
+import { getConsent } from "@/lib/cookies/consent";
+
+export function canUse(category: "preferences" | "analytics" | "marketing") {
+  const c = getConsent();
+  return !!c?.[category];
+}
+```
+
+**Plausible loader (plausible.ts):**
+
+```ts
+export function loadPlausible(domain: string) {
+  if (document.querySelector('script[src*="plausible.io/js/script.js"]')) return;
+  const s = document.createElement("script");
+  s.async = true;
+  s.defer = true;
+  s.dataset.domain = domain;
+  s.src = "https://plausible.io/js/script.js";
+  document.head.appendChild(s);
+}
+
+export function track(event: string, props?: Record<string, any>) {
+  // @ts-ignore
+  window.plausible?.(event, { props });
+}
+```
+
+**Blog frontmatter example:**
+
+```md
+---
+slug: "consciousness-bridging-intro"
+title: "Consciousness Bridging: A Primer"
+date: "2025-10-25"
+tags: ["ethos", "design", "ai"]
+excerpt: "How state-change awareness becomes a design principle."
+ogImage: "/og/primer.png"
+---
+
+Your markdown content here…
+```
+
+---
+
+That’s it. Run this enhancement pack exactly as written, then output the QA checklist results and changed files.

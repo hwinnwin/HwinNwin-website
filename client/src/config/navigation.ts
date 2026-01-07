@@ -10,14 +10,14 @@ export interface NavItem {
 // Main site navigation - these should remain stable
 export const MAIN_NAV_ITEMS: NavItem[] = [
   { 
-    href: "/", 
-    label: "Home",
-    description: "HwinNwin homepage"
-  },
-  { 
     href: "/hwin/services", 
     label: "Services",
     description: "Business services and solutions"
+  },
+  { 
+    href: "/hwin/about", 
+    label: "About",
+    description: "About HwinNwin"
   },
   { 
     href: "/hwin/work", 
@@ -28,6 +28,21 @@ export const MAIN_NAV_ITEMS: NavItem[] = [
     href: "/panel-quote", 
     label: "Auto Quoter",
     description: "Panel repair quotation tool"
+  },
+  { 
+    href: "/blog", 
+    label: "Insights",
+    description: "Consciousness bridging philosophy and design"
+  },
+  { 
+    href: "/hwin/insights", 
+    label: "Business Blog",
+    description: "Business insights and articles"
+  },
+  { 
+    href: "/contact", 
+    label: "Contact",
+    description: "Get in touch with us"
   }
 ];
 

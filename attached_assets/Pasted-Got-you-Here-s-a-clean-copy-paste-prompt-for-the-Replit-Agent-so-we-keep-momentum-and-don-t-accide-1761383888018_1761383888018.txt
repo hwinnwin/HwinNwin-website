@@ -1,0 +1,101 @@
+Got you. Here’s a clean, copy-paste prompt for the Replit Agent so we keep momentum and don’t accidentally change unrelated parts.
+
+---
+
+### Replit Agent Prompt (copy-paste)
+
+**Goal:** Launch the site with a new Ethos/Codex homepage, keep existing tools, and ensure stable UI + cookie controls.
+
+**Do exactly these steps, nothing more:**
+
+1. **Deployment state**
+
+* If the deployment is suspended, do not change code. Stop and surface the suspension notice so the owner can update billing and press “Resume deployment”. After resume, continue with steps below.
+
+2. **Routing & pages**
+
+* Make the **Codex/Ethos page the homepage (`/`)**.
+* Move the current marketing homepage to **`/hwin`** (leave content intact).
+* Confirm existing tools still work at:
+
+  * `/panel-quote` (Auto Quoter)
+  * `/owner` (Owner Dashboard, PIN 6043)
+* Create a file `client/src/pages/Codex.tsx` and wire it as the route for `/`.
+* Add `client/src/content/mission.md` and `client/src/content/codex.md` using the provided mission statement + codex text from the project docs. Render them with elegant headings, generous whitespace, and smooth fade-in on scroll (no heavy libraries).
+
+3. **Navigation (second row only)**
+
+* Do **not** reintroduce the old top nav row.
+* In `client/src/config/navigation.ts`:
+
+  * Keep: `Home`, `Services`, `About`, `Case Studies`, `Blog`.
+  * Insert **`Auto Quoter`** link **after** `Case Studies`, pointing to `/panel-quote`.
+  * Keep the right-side **Get Started** button.
+* Ensure active-route highlighting still works and the mobile menu mirrors the same order.
+
+4. **Cookie consent (full control, no tracking before consent)**
+
+* Implement a **granular cookie banner + preferences modal** with categories:
+
+  * **Essential** (always on, non-toggleable)
+  * **Preferences**
+  * **Analytics**
+  * **Marketing**
+* Default all non-essential categories to **off** until the user opts in.
+* Add a **“Manage Cookies”** footer link to reopen the modal anytime.
+* Store choices in `localStorage` as `cookiePreferences` (JSON with booleans per category + timestamp + version).
+* Respect **Do Not Track** by auto-disabling all non-essential if `navigator.doNotTrack === "1"`.
+* Block initialization of analytics/marketing scripts until consent is true for those categories. Wrap any existing analytics init in a guard:
+
+  ```ts
+  if (prefs.analytics) { initAnalytics() }
+  if (prefs.marketing) { initMarketing() }
+  ```
+* Add a lightweight `client/src/lib/cookies/consent.ts` with:
+
+  * `getConsent()`, `setConsent()`, `onConsentChange(cb)`
+  * a version number so future schema changes trigger a re-prompt
+
+5. **Stability & white-screen prevention**
+
+* Keep the existing error-recovery system:
+
+  * 5-second mount watchdog + friendly error screen (Refresh / Home).
+* Add **cache-busting** by bumping the app build version constant (e.g., `APP_BUILD="2025.10.25"` in `env.ts`) and inject it into the HTML as a query suffix on main bundle to force fresh loads after deploy.
+* Ensure React imports remain standardized (`import React from "react"`), do not re-introduce `import * as React`.
+
+6. **Design polish (Codex page only)**
+
+* Typography: large, readable headings; 70–80ch line length; generous leading.
+* Palette: deep indigo background sections with light text; soft separators.
+* Subtle scroll-reveal (Framer Motion) for sections; no parallax, no heavy video.
+
+7. **QA checklist (must pass)**
+
+* `/` shows the Codex/Ethos content.
+* `/hwin` shows the previous marketing homepage unchanged.
+* `/panel-quote` loads and navigation includes **Auto Quoter** after **Case Studies**.
+* Cookie banner appears on first load, no analytics fires before consent.
+* “Manage Cookies” opens the modal; toggles persist; revoking consent disables scripts on next navigation/reload.
+* No white screen after deploy; hard refresh not required.
+
+8. **Version control**
+
+* Create a single commit:
+
+  * **Message:** `feat(site): set Codex as homepage, move marketing to /hwin, add granular cookie consent, keep stable nav + error recovery`
+* Push to GitHub.
+
+**Important constraints**
+
+* Do not touch Owner Dashboard logic, Auto Quoter logic, or any unrelated configs.
+* Do not add new external services or heavy dependencies.
+
+**Deliverables**
+
+* Updated routes & pages, cookie consent module, nav config, and one commit pushed.
+* Short note listing changed files and confirming the QA checklist above.
+
+---
+
+If you want, I can also give you a minimal file scaffold for `Codex.tsx` and the cookie modal to paste in.

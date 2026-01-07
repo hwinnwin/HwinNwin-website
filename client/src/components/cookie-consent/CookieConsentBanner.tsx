@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Cookie, Settings } from 'lucide-react';
@@ -9,9 +9,26 @@ export function CookieConsentBanner() {
   const { hasConsented, acceptAll, rejectOptional } = useCookieConsent();
   const [showSettings, setShowSettings] = useState(false);
 
-  // Don't show banner if user has already consented
+  // Listen for global event to open cookie settings
+  useEffect(() => {
+    const handleOpenSettings = () => {
+      setShowSettings(true);
+    };
+
+    window.addEventListener('openCookieSettings', handleOpenSettings);
+    return () => {
+      window.removeEventListener('openCookieSettings', handleOpenSettings);
+    };
+  }, []);
+
+  // Don't show banner if user has already consented, but still render modal
   if (hasConsented) {
-    return null;
+    return (
+      <CookieSettingsModal 
+        open={showSettings}
+        onOpenChange={setShowSettings}
+      />
+    );
   }
 
   return (

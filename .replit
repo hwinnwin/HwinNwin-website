@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["sqlite", "jq"]
+packages = ["sqlite", "jq", "glib", "nss", "nspr", "dbus", "atk", "cups", "mesa", "cairo", "pango", "alsa-lib", "xorg.libX11", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "xorg.libxkbfile", "libxkbcommon"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -42,6 +42,10 @@ externalPort = 8008
 [[ports]]
 localPort = 38847
 externalPort = 9000
+
+[[ports]]
+localPort = 39639
+externalPort = 8099
 
 [[ports]]
 localPort = 40863

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -108,19 +108,7 @@ export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteRevi
 
   const { data: quote, isLoading } = useQuery<Quote>({
     queryKey: ['/api/quote', quoteId],
-    enabled: isOpen && !!quoteId,
-    onSuccess: (data) => {
-      if (data) {
-        setItems(data.items);
-        form.reset({
-          items: data.items,
-          rates: data.rates,
-          estimatedHours: data.estimatedHours || 0,
-          ownerNotes: data.ownerNotes || ""
-        });
-        setUseManualHours(data.estimatedHours > 0);
-      }
-    }
+    enabled: isOpen && !!quoteId
   });
 
   const form = useForm<ReviewFormData>({
@@ -139,6 +127,19 @@ export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteRevi
       ownerNotes: ""
     }
   });
+
+  useEffect(() => {
+    if (quote) {
+      setItems(quote.items);
+      form.reset({
+        items: quote.items,
+        rates: quote.rates,
+        estimatedHours: quote.estimatedHours || 0,
+        ownerNotes: quote.ownerNotes || ""
+      });
+      setUseManualHours(quote.estimatedHours > 0);
+    }
+  }, [quote, form]);
 
   const rates = form.watch('rates');
   const estimatedHours = form.watch('estimatedHours');
@@ -326,6 +327,7 @@ export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteRevi
                       className="w-full h-32 object-cover rounded-lg border border-border cursor-pointer hover:opacity-90"
                       onClick={() => window.open(`/uploads/${photo}`, '_blank')}
                       data-testid={`photo-${index}`}
+                      loading="lazy"
                     />
                   ))}
                 </div>
@@ -515,7 +517,7 @@ export default function QuoteReviewModal({ quoteId, isOpen, onClose }: QuoteRevi
                       <div className="flex items-center space-x-2">
                         <Checkbox 
                           checked={useManualHours} 
-                          onCheckedChange={setUseManualHours}
+                          onCheckedChange={(checked) => setUseManualHours(checked === true)}
                           data-testid="checkbox-use-manual-hours"
                         />
                         <label className="text-sm text-muted-foreground">Enable Override</label>

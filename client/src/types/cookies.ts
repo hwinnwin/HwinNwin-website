@@ -1,6 +1,6 @@
 // Cookie consent types and configuration
 
-export type CookieCategory = 'essential' | 'analytics' | 'functional' | 'marketing';
+export type CookieCategory = 'essential' | 'analytics' | 'preferences' | 'marketing';
 
 export interface CookieInfo {
   name: string;
@@ -12,10 +12,26 @@ export interface CookieInfo {
 export interface CookieConsent {
   essential: boolean; // Always true, but tracked for completeness
   analytics: boolean;
-  functional: boolean;
+  preferences: boolean;
   marketing: boolean;
   timestamp: number;
   version: string; // For handling policy updates
+}
+
+// Check if Do Not Track is enabled
+export function checkDoNotTrack(): boolean {
+  if (navigator.doNotTrack === '1' || navigator.doNotTrack === 'yes') {
+    return true;
+  }
+  // @ts-ignore - some browsers use this
+  if (window.doNotTrack === '1' || window.doNotTrack === 'yes') {
+    return true;
+  }
+  // @ts-ignore - IE and older Edge
+  if (navigator.msDoNotTrack === '1') {
+    return true;
+  }
+  return false;
 }
 
 export const COOKIE_CATEGORIES: Record<CookieCategory, CookieInfo> = {
@@ -31,8 +47,8 @@ export const COOKIE_CATEGORIES: Record<CookieCategory, CookieInfo> = {
     examples: ['Plausible Analytics', 'Page views', 'User interactions', 'Performance monitoring'],
     required: false
   },
-  functional: {
-    name: 'Functional Cookies',
+  preferences: {
+    name: 'Preference Cookies',
     description: 'These cookies remember your preferences and settings to provide a personalized experience, such as language preferences, location settings, and customized content.',
     examples: ['Language preferences', 'Theme settings', 'User preferences', 'Remembered forms'],
     required: false
@@ -48,7 +64,7 @@ export const COOKIE_CATEGORIES: Record<CookieCategory, CookieInfo> = {
 export const DEFAULT_CONSENT: CookieConsent = {
   essential: true, // Always required
   analytics: false,
-  functional: false,
+  preferences: false,
   marketing: false,
   timestamp: Date.now(),
   version: '1.0'

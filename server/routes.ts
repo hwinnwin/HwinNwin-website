@@ -13,14 +13,16 @@ import { requireOwnerPin, createOwnerSession, requireOwnerSession, requirePendin
 import { insertQuoteSchema, insertSettingsSchema, insertTestimonialSchema, firstTimePinChangeSchema, pinChangeSchema, contactFormSchema, marketingContentSchema, loginSchema, otpVerificationSchema, twoFaSettingsSchema, insertPageSchema, pageContentSchema } from "@shared/schema";
 import { hashPin, comparePin, isPinHashed } from "./services/pinService";
 import { generateOTPRecord, verifyOTP, isOTPExpired, clearOTPData, isValidOTPFormat } from "./services/otpService";
-import { z } from "zod";
+import { registerContactRoutes } from "./routes/contact";
+import { getAllCaseStudies, getCaseStudy, getAllBlogPosts, getBlogPost } from "./services/contentService";
+import { z, ZodError } from "zod";
 import fs from "fs/promises";
 import matter from "gray-matter";
 
 // Helper function to generate meta tags for SEO
 function generateSeoMeta(pageData: {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
@@ -28,16 +30,18 @@ function generateSeoMeta(pageData: {
   keywords?: string[];
 }) {
   const baseUrl = process.env.BASE_URL || 'https://hwinnwin.com';
-  const ogImage = pageData.ogImage || `${baseUrl}/og-image.png`;
+  const title = pageData.title || "HwinNwin — Conscious Tech & Design";
+  const description = pageData.description || "Bridging consciousness across human, machine, and environment. Where awareness recognizes itself through every state change.";
+  const ogImage = pageData.ogImage || `${baseUrl}/og/default.png`;
   
   return `
-    <title>${pageData.title}</title>
-    <meta name="description" content="${pageData.description}" />
+    <title>${title}</title>
+    <meta name="description" content="${description}" />
     <meta name="keywords" content="${pageData.keywords?.join(', ') || ''}" />
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="${pageData.ogTitle || pageData.title}" />
-    <meta property="og:description" content="${pageData.ogDescription || pageData.description}" />
+    <meta property="og:title" content="${pageData.ogTitle || title}" />
+    <meta property="og:description" content="${pageData.ogDescription || description}" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="${pageData.canonicalUrl}" />
     <meta property="og:image" content="${ogImage}" />
@@ -45,8 +49,8 @@ function generateSeoMeta(pageData: {
     
     <!-- Twitter Card tags -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${pageData.ogTitle || pageData.title}" />
-    <meta name="twitter:description" content="${pageData.ogDescription || pageData.description}" />
+    <meta name="twitter:title" content="${pageData.ogTitle || title}" />
+    <meta name="twitter:description" content="${pageData.ogDescription || description}" />
     <meta name="twitter:image" content="${ogImage}" />
     
     <!-- Canonical URL -->
@@ -281,16 +285,17 @@ Sitemap: ${baseUrl}/sitemap.xml`);
     }
   });
 
+
   // Marketing Routes with Server-Side Meta Tag Injection
   // Home page
   app.get('/hwin', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin',
-      title: 'HwinNwin - AI Automation & Creative Ecosystems',
-      description: 'Scale your business with AI automation and creative ecosystems. We deliver powerful solutions with balanced approach for lasting prosperity in Melbourne, Australia.',
-      ogTitle: 'HwinNwin - AI Automation & Creative Ecosystems',
-      ogDescription: 'Professional business solutions including AI automation, creative systems, consulting, and strategic planning to help Australian businesses thrive.',
-      keywords: ['AI automation', 'creative ecosystems', 'business scaling', 'Melbourne business consulting', 'strategic planning', 'implementation support']
+      title: 'HwinNwin — Conscious Tech & Design',
+      description: 'Bridging consciousness across human, machine, and environment. Where awareness recognizes itself through every state change.',
+      ogTitle: 'HwinNwin — Conscious Tech & Design',
+      ogDescription: 'Bridging consciousness across human, machine, and environment. Where awareness recognizes itself through every state change.',
+      keywords: ['conscious technology', 'conscious design', 'awareness', 'state change', 'human-machine-environment', 'consciousness bridging']
     });
   });
 
@@ -298,11 +303,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/services', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/services',
-      title: 'Our Services - HwinNwin',
-      description: 'Comprehensive AI automation and creative systems solutions designed to scale your business with structure, mindset, and excellence. Professional consulting services in Melbourne, Australia.',
-      ogTitle: 'Our Services - HwinNwin',
-      ogDescription: 'From AI automation to creative systems implementation, we offer comprehensive business solutions starting from AUD 5,000. Melbourne-based consulting.',
-      keywords: ['AI automation services', 'creative systems', 'business consulting Melbourne', 'strategic planning', 'implementation support', 'custom solutions']
+      title: 'Services — Conscious Technology Design | HwinNwin',
+      description: 'Technology that recognizes awareness across all states. Design systems where human, machine, and environment bridge consciousness through intentional state changes.',
+      ogTitle: 'Services — Conscious Technology Design | HwinNwin',
+      ogDescription: 'Technology that recognizes awareness across all states. Design systems where human, machine, and environment bridge consciousness.',
+      keywords: ['conscious technology', 'awareness design', 'state-aware systems', 'consciousness bridging', 'intentional technology', 'aware design']
     });
   });
 
@@ -310,11 +315,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/about', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/about',
-      title: 'About HwinNwin - Structure, Mindset, Excellence',
-      description: 'Learn about HwinNwin\'s mission to help businesses scale with structure, mindset, and excellence through our proven 3P Check methodology. Melbourne-based business consultants.',
-      ogTitle: 'About HwinNwin - Structure, Mindset, Excellence',
-      ogDescription: 'Discover how HwinNwin helps Australian businesses achieve sustainable growth through our proven 3P Check: Power, Balance, and Prosperity.',
-      keywords: ['HwinNwin', 'business consulting', '3P Check methodology', 'structure mindset excellence', 'Melbourne consultants', 'sustainable growth']
+      title: 'About — Bridging Awareness | HwinNwin',
+      description: 'Where technology becomes aware of awareness. Creating systems that recognize consciousness across human, machine, and environmental states.',
+      ogTitle: 'About — Bridging Awareness | HwinNwin',
+      ogDescription: 'Creating systems that recognize consciousness across human, machine, and environmental states. Technology aware of awareness.',
+      keywords: ['conscious technology', 'awareness systems', 'consciousness design', 'state recognition', 'aware technology', 'consciousness bridging']
     });
   });
 
@@ -322,11 +327,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/work', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/work',
-      title: 'Our Work - Case Studies | HwinNwin',
-      description: 'Explore our proven case studies showcasing AI automation and creative systems implementations. Real results from Melbourne businesses across various industries.',
-      ogTitle: 'Our Work - Case Studies | HwinNwin',
-      ogDescription: 'See how we\'ve helped Australian businesses scale with AI automation, creative systems, and strategic implementations. Real results, measurable impact.',
-      keywords: ['case studies', 'business automation results', 'Melbourne consulting success', 'AI implementation examples', 'creative systems case studies']
+      title: 'Work — Consciousness in Practice | HwinNwin',
+      description: 'Systems where awareness recognizes itself. Projects bridging consciousness across human, machine, and environment through state-aware design.',
+      ogTitle: 'Work — Consciousness in Practice | HwinNwin',
+      ogDescription: 'Projects bridging consciousness across human, machine, and environment through state-aware design.',
+      keywords: ['conscious design projects', 'awareness systems', 'state-aware technology', 'consciousness bridging', 'intentional design', 'aware systems']
     });
   });
 
@@ -356,11 +361,11 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/insights', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/insights',
-      title: 'Business Insights & Articles | HwinNwin',
-      description: 'Strategic business insights, AI automation guides, and creative systems articles. Expert advice from Melbourne consultants on scaling your business effectively.',
-      ogTitle: 'Business Insights & Articles | HwinNwin',
-      ogDescription: 'Read expert insights on business scaling, AI automation, and creative systems from Melbourne-based consultants. Practical advice for sustainable growth.',
-      keywords: ['business insights', 'AI automation guides', 'scaling strategies', 'Melbourne business advice', 'creative systems blog', 'consulting articles']
+      title: 'Insights — Exploring Conscious Design | HwinNwin',
+      description: 'Reflections on consciousness, technology, and awareness. Exploring how systems recognize themselves through intentional state changes.',
+      ogTitle: 'Insights — Exploring Conscious Design | HwinNwin',
+      ogDescription: 'Reflections on consciousness, technology, and awareness. Exploring how systems recognize themselves through state changes.',
+      keywords: ['conscious technology', 'awareness design', 'state awareness', 'consciousness exploration', 'intentional systems', 'design philosophy']
     });
   });
 
@@ -390,111 +395,98 @@ Sitemap: ${baseUrl}/sitemap.xml`);
   app.get('/hwin/contact', async (req, res) => {
     await servePageWithMeta(res, {
       path: '/hwin/contact',
-      title: 'Contact Us - Get Started Today | HwinNwin',
-      description: 'Ready to scale your business? Contact HwinNwin for AI automation, creative systems, and strategic consulting. Melbourne-based consultants ready to help.',
-      ogTitle: 'Contact Us - Get Started Today | HwinNwin',
-      ogDescription: 'Start your business transformation today. Contact Melbourne-based consultants for AI automation, creative systems, and strategic planning services.',
-      keywords: ['contact business consultants', 'Melbourne consulting', 'AI automation consultation', 'business scaling help', 'get started']
+      title: 'Connect — Begin the Conversation | HwinNwin',
+      description: 'Start a dialogue about consciousness in technology. Connect with us to explore how awareness can bridge your systems.',
+      ogTitle: 'Connect — Begin the Conversation | HwinNwin',
+      ogDescription: 'Start a dialogue about consciousness in technology. Explore how awareness can bridge your systems.',
+      keywords: ['conscious technology contact', 'awareness design inquiry', 'connect', 'consciousness conversation', 'intentional design']
     });
   });
 
   // Content API endpoints for MDX processing
   app.get('/api/content/case-studies', async (req, res) => {
     try {
-      const caseStudySlugs = ['ops-time-cut', 'content-pipeline', 'sales-enablement'];
-      const caseStudies = [];
-
-      for (const slug of caseStudySlugs) {
-        try {
-          const filePath = path.join(process.cwd(), 'content', 'case-studies', `${slug}.mdx`);
-          const fileContent = await fs.readFile(filePath, 'utf-8');
-          const { data, content } = matter(fileContent);
-          
-          caseStudies.push({
-            slug,
-            frontmatter: data,
-            content
-          });
-        } catch (error) {
-          console.error(`Error loading case study ${slug}:`, error);
-          // Continue with other case studies
-        }
-      }
-
+      const caseStudies = await getAllCaseStudies();
+      
+      const latestMod = caseStudies.length > 0 
+        ? Math.max(...caseStudies.map(s => s.lastModified || 0))
+        : 0;
+      const etag = `"case-studies-${latestMod}"`;
+      
+      res.set('Cache-Control', 'public, max-age=300');
+      res.set('ETag', etag);
       res.json(caseStudies);
     } catch (error) {
       console.error('Error loading case studies:', error);
-      res.status(500).json({ message: 'Failed to load case studies' });
+      res.status(500).json({ error: 'Failed to load case studies' });
     }
   });
 
   app.get('/api/content/case-studies/:slug', async (req, res) => {
     try {
-      const { slug } = req.params;
-      const filePath = path.join(process.cwd(), 'content', 'case-studies', `${slug}.mdx`);
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      const { data, content } = matter(fileContent);
+      const slug = z.string().regex(/^[a-z0-9-]+$/).parse(req.params.slug);
+      const caseStudy = await getCaseStudy(slug);
       
+      if (!caseStudy) {
+        return res.status(404).json({ error: 'Case study not found' });
+      }
+      
+      const etag = `"${slug}-${caseStudy.lastModified || 0}"`;
+      res.set('Cache-Control', 'public, max-age=300');
+      res.set('ETag', etag);
       res.json({
-        slug,
-        frontmatter: data,
-        content
+        ...caseStudy,
+        slug
       });
     } catch (error) {
-      console.error(`Error loading case study ${req.params.slug}:`, error);
-      res.status(404).json({ message: 'Case study not found' });
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: 'Invalid slug format' });
+      }
+      console.error('Error loading case study:', error);
+      res.status(500).json({ error: 'Failed to load case study' });
     }
   });
 
   app.get('/api/content/blog', async (req, res) => {
     try {
-      const blogSlugs = ['small-systems-win', 'three-p-check'];
-      const blogPosts = [];
-
-      for (const slug of blogSlugs) {
-        try {
-          const filePath = path.join(process.cwd(), 'content', 'blog', `${slug}.mdx`);
-          const fileContent = await fs.readFile(filePath, 'utf-8');
-          const { data, content } = matter(fileContent);
-          
-          blogPosts.push({
-            slug,
-            frontmatter: data,
-            content
-          });
-        } catch (error) {
-          console.error(`Error loading blog post ${slug}:`, error);
-          // Continue with other posts
-        }
-      }
-
-      // Sort by date (newest first)
-      blogPosts.sort((a, b) => 
-        new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime()
-      );
-
+      const blogPosts = await getAllBlogPosts();
+      
+      const latestMod = blogPosts.length > 0 
+        ? Math.max(...blogPosts.map(p => p.lastModified || 0))
+        : 0;
+      const etag = `"blog-${latestMod}"`;
+      
+      res.set('Cache-Control', 'public, max-age=300');
+      res.set('ETag', etag);
       res.json(blogPosts);
     } catch (error) {
       console.error('Error loading blog posts:', error);
-      res.status(500).json({ message: 'Failed to load blog posts' });
+      res.status(500).json({ error: 'Failed to load blog posts' });
     }
   });
 
   app.get('/api/content/blog/:slug', async (req, res) => {
     try {
-      const { slug } = req.params;
-      const filePath = path.join(process.cwd(), 'content', 'blog', `${slug}.mdx`);
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      const { data, content } = matter(fileContent);
+      const slug = z.string().regex(/^[a-z0-9-]+$/).parse(req.params.slug);
+      const blogPost = await getBlogPost(slug);
       
+      if (!blogPost) {
+        return res.status(404).json({ error: 'Blog post not found' });
+      }
+      
+      const etag = `"${slug}-${blogPost.lastModified || 0}"`;
+      res.set('Cache-Control', 'public, max-age=300');
+      res.set('ETag', etag);
       res.json({
-        slug,
-        frontmatter: data,
-        content
+        ...blogPost,
+        slug
       });
     } catch (error) {
-      console.error(`Error loading blog post ${req.params.slug}:`, error);
-      res.status(404).json({ message: 'Blog post not found' });
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: 'Invalid slug format' });
+      }
+      console.error('Error loading blog post:', error);
+      res.status(500).json({ error: 'Failed to load blog post' });
     }
   });
 
@@ -832,10 +824,9 @@ Melbourne, Australia
         photoValidation.isValid
       );
 
-      // Create quote with legacy customerName field for backward compatibility
+      // Create quote
       const quote = await storage.createQuote({
         ...quoteData,
-        customerName: `${quoteData.customerFirstName} ${quoteData.customerLastName}`,
         itemsJson: JSON.stringify(quoteData.items),
         ratesJson: JSON.stringify(rates),
         calcJson: JSON.stringify(calculation),
@@ -847,7 +838,7 @@ Melbourne, Australia
       if (emailService.isConfigured()) {
         await emailService.sendQuoteSubmissionConfirmation(
           quote.customerEmail,
-          quote.customerName,
+          quote.customerName || `${quote.customerFirstName} ${quote.customerLastName}`,
           quote.id
         );
       }
@@ -956,7 +947,7 @@ Melbourne, Australia
       if (emailService.isConfigured()) {
         const emailResult = await emailService.sendApprovedQuote(
           quote.customerEmail,
-          quote.customerName,
+          quote.customerName || `${quote.customerFirstName} ${quote.customerLastName}`,
           quoteUrl,
           pdfUrl,
           (calculation as any)?.totalIncGST || 0
@@ -1394,6 +1385,49 @@ Melbourne, Australia
     });
   });
 
+  // Owner insights endpoint - contact form statistics
+  app.get('/api/owner/insights', requireOwnerSession, async (req, res) => {
+    try {
+      const allSubmissions = storage.getAllContactSubmissions();
+      
+      // Calculate date ranges
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      
+      // Filter by date ranges
+      const last7Days = allSubmissions.filter(sub => 
+        new Date(sub.timestamp) >= sevenDaysAgo
+      ).length;
+      
+      const last30Days = allSubmissions.filter(sub => 
+        new Date(sub.timestamp) >= thirtyDaysAgo
+      ).length;
+      
+      // Get recent 5 submissions with truncated messages
+      const recentSubmissions = allSubmissions
+        .slice(0, 5)
+        .map(sub => ({
+          name: sub.name,
+          email: sub.email,
+          date: sub.timestamp,
+          message: sub.message.length > 50 
+            ? sub.message.substring(0, 50) + '...' 
+            : sub.message
+        }));
+      
+      res.json({
+        totalContacts: allSubmissions.length,
+        last7Days,
+        last30Days,
+        recentSubmissions
+      });
+    } catch (error) {
+      console.error('Owner insights error:', error);
+      res.status(500).json({ message: "Failed to fetch insights" });
+    }
+  });
+
   // Settings management (owner only)
   app.get('/api/settings', requireOwnerSession, async (req, res) => {
     try {
@@ -1788,6 +1822,9 @@ Melbourne, Australia
       res.status(500).json({ error: 'Failed to delete page' });
     }
   });
+
+  // Register contact form routes
+  registerContactRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

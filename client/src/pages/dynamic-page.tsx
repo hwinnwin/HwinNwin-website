@@ -284,6 +284,7 @@ function ImageBlock({ block, ...props }: ContentBlockRendererProps) {
             src={src} 
             alt={alt || ''} 
             className="w-full h-auto rounded-lg shadow-lg"
+            loading="lazy"
           />
           {caption && (
             <p className="text-center text-sm text-muted-foreground mt-4">
@@ -363,6 +364,7 @@ function TestimonialBlock({ block, ...props }: ContentBlockRendererProps) {
                       src={testimonial.avatar} 
                       alt={testimonial.name}
                       className="h-10 w-10 rounded-full mr-3"
+                      loading="lazy"
                     />
                   )}
                   <div>
@@ -402,6 +404,7 @@ function ProductBlock({ block, ...props }: ContentBlockRendererProps) {
                     src={product.image} 
                     alt={product.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
               )}
