@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Mail, BarChart3, Bot, Gamepad2, Globe, Gauge, Heart, ArrowUpRight } from "lucide-react";
+import { Mail, BarChart3, Bot, Gamepad2, Globe, Gauge, Heart, ArrowUpRight, Megaphone, Sparkles } from "lucide-react";
 import { SEO } from "@/lib/seo/meta";
 import { SITE_CONFIG } from "@/lib/constants";
 import { SkipNav } from "@/components/layout/SkipNav";
@@ -16,6 +16,8 @@ const portalIcons: Record<string, React.ReactNode> = {
   globe: <Globe className="w-5 h-5" />,
   gauge: <Gauge className="w-5 h-5" />,
   heart: <Heart className="w-5 h-5" />,
+  megaphone: <Megaphone className="w-5 h-5" />,
+  sparkles: <Sparkles className="w-5 h-5" />,
 };
 
 export default function CodexI18n() {
