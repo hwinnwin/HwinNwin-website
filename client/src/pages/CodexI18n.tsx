@@ -72,16 +72,17 @@ export default function CodexI18n() {
           </nav>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
-            <a href="mailto:hello@hwinnwin.com">
-              <Button
+            <Button
                 variant="outline"
                 className="bg-transparent border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-slate-100"
                 aria-label="Contact us via email"
+                asChild
               >
-                <Mail className="w-4 h-4 mr-2" aria-hidden="true" />
-                {t.nav.contact}
+                <a href="mailto:hello@hwinnwin.com">
+                  <Mail className="w-4 h-4 mr-2" aria-hidden="true" />
+                  {t.nav.contact}
+                </a>
               </Button>
-            </a>
           </div>
         </div>
       </header>
@@ -103,14 +104,15 @@ export default function CodexI18n() {
           <p className="text-xl md:text-2xl leading-relaxed text-slate-300 mb-8 max-w-3xl mx-auto">
             {t.hero.subheadline}
           </p>
-          <a href="mailto:hello@hwinnwin.com">
-            <Button
+          <Button
               size="lg"
               className="bg-[#A7B6FF] text-[#0A0D1A] hover:bg-[#B4FFE7] font-semibold px-8 py-6 text-lg"
+              asChild
             >
-              {t.hero.cta}
+              <a href="mailto:hello@hwinnwin.com">
+                {t.hero.cta}
+              </a>
             </Button>
-          </a>
         </motion.div>
       </motion.section>
 
@@ -312,14 +314,15 @@ export default function CodexI18n() {
           <p className="text-xl md:text-2xl leading-relaxed text-slate-300 mb-8">
             {t.cta.content} <em className="text-[#B4FFE7] not-italic font-semibold">{t.cta.emphasis}</em>{t.cta.contentEnd}
           </p>
-          <a href="mailto:hello@hwinnwin.com">
-            <Button
+          <Button
               size="lg"
               className="bg-[#A7B6FF] text-[#0A0D1A] hover:bg-[#B4FFE7] font-semibold px-8 py-6 text-lg"
+              asChild
             >
-              {t.cta.email}
+              <a href="mailto:hello@hwinnwin.com">
+                {t.cta.email}
+              </a>
             </Button>
-          </a>
         </motion.div>
       </motion.section>
       </main>
