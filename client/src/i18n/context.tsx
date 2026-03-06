@@ -11,6 +11,21 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 const LOCALE_STORAGE_KEY = "hwinnwin-locale";
 
+// Deep merge: overlay dynamic content over static translations
+function deepMerge<T>(base: T, override: Partial<T>): T {
+  if (!override) return base;
+  const result = { ...base } as any;
+  for (const key of Object.keys(override)) {
+    const val = (override as any)[key];
+    if (val && typeof val === "object" && !Array.isArray(val) && typeof (base as any)[key] === "object" && !Array.isArray((base as any)[key])) {
+      result[key] = deepMerge((base as any)[key], val);
+    } else if (val !== undefined) {
+      result[key] = val;
+    }
+  }
+  return result;
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => {
     // Check URL for locale parameter first
@@ -35,6 +50,18 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return defaultLocale;
   });
 
+  // Dynamic content from the admin editor API
+  const [dynamicContent, setDynamicContent] = useState<Record<string, any> | null>(null);
+
+  useEffect(() => {
+    fetch("/api/homepage-content")
+      .then(res => res.ok ? res.json() : null)
+      .catch(() => null)
+      .then(data => {
+        if (data) setDynamicContent(data);
+      });
+  }, []);
+
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale);
     localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
@@ -56,7 +83,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = locale;
   }, [locale]);
 
-  const t = getTranslations(locale);
+  // Start with static translations, overlay any admin-saved content
+  const staticT = getTranslations(locale);
+  const t = dynamicContent && dynamicContent[locale]
+    ? deepMerge(staticT, dynamicContent[locale])
+    : staticT;
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>

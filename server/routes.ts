@@ -111,6 +111,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ ok: true, timestamp: new Date().toISOString() });
   });
 
+  // Homepage content API (for admin panel)
+  const homepageContentPath = path.join(process.cwd(), "data", "homepage-content.json");
+
+  app.get('/api/homepage-content', async (req, res) => {
+    try {
+      const data = await fs.readFile(homepageContentPath, 'utf-8');
+      res.json(JSON.parse(data));
+    } catch {
+      // No saved content yet — frontend will fall back to static locale files
+      res.status(404).json({ message: "No saved content" });
+    }
+  });
+
+  app.put('/api/homepage-content', requireOwnerSession, async (req, res) => {
+    try {
+      const content = req.body;
+      if (!content || !content.en || !content.vi || !content.zh) {
+        return res.status(400).json({ message: "Content must include en, vi, and zh locales" });
+      }
+      const dataDir = path.join(process.cwd(), "data");
+      await fs.mkdir(dataDir, { recursive: true });
+      await fs.writeFile(homepageContentPath, JSON.stringify(content, null, 2), 'utf-8');
+      res.json({ success: true, message: "Homepage content saved" });
+    } catch (error: any) {
+      console.error("Error saving homepage content:", error);
+      res.status(500).json({ message: "Failed to save content" });
+    }
+  });
+
   // General file upload endpoint
   app.post('/api/upload', upload.single('image'), async (req, res) => {
     try {

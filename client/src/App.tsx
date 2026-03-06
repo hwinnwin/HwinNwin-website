@@ -19,6 +19,9 @@ import PublicQuote from "@/pages/public-quote";
 import CodexI18n from "@/pages/CodexI18n";
 import Codex from "@/pages/Codex";
 
+// Admin Panel
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+
 // Marketing Pages
 import HomePage from "@/pages/marketing/home";
 import ServicesPage from "@/pages/marketing/services";
@@ -44,6 +47,9 @@ function Router() {
     <Switch>
       {/* Codex/Ethos Homepage - with i18n support (Vietnamese, Chinese, English) */}
       <Route path="/" component={CodexI18n} />
+
+      {/* Admin Panel */}
+      <Route path="/admin" component={AdminDashboard} />
 
       {/* Legacy Codex route (English only) */}
       <Route path="/codex-legacy" component={Codex} />

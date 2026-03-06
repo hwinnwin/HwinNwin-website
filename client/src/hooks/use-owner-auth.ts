@@ -24,8 +24,8 @@ export function useOwnerAuth() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Check if this is an owner route
-  const isOwnerRoute = location.startsWith('/owner');
+  // Check if this is an owner or admin route
+  const isOwnerRoute = location.startsWith('/owner') || location.startsWith('/admin');
 
   // Check for existing session on owner routes
   const sessionCheck = useQuery({
